@@ -218,6 +218,10 @@
 				text-align: center;
 			}
 
+			.wide-input {
+				min-width: 140px;
+			}
+
 			.row-actions {
 				display: flex;
 				gap: 8px;
@@ -331,6 +335,14 @@
 				width: 220px;
 			}
 
+			.logistica-table .col-cantidadCamion,
+			.logistica-table .col-otras,
+			.logistica-table .col-economico,
+			.logistica-table .col-acompanante {
+				max-width: 90px;
+				width: 90px;
+			}
+
 			.logistica-table .col-fecha {
 				max-width: 70px;
 				width: 70px;
@@ -354,6 +366,15 @@
 				overflow: hidden;
 			}
 
+			.logistica-table .stacked-fields {
+				display: grid;
+				gap: 6px;
+			}
+
+			.logistica-table .stacked-field {
+				min-height: 28px;
+			}
+
 			.logistica-table input[type="text"],
 			.logistica-table input[type="number"] {
 				padding: 6px 8px;
@@ -361,7 +382,7 @@
 
 			@media print {
 				@page {
-					size: A4 portrait;
+					size: A4 landscape;
 					margin: 6mm;
 				}
 
@@ -422,12 +443,34 @@
 					white-space: normal;
 					word-break: break-word;
 					overflow-wrap: anywhere;
+					border-bottom: 1px solid #94a3b8;
+				}
+
+				.logistica-table thead th {
+					border-bottom: 2px solid #475569;
+				}
+
+				.logistica-table td + td,
+				.logistica-table th + th {
+					border-left: 1px solid #cbd5f5;
+				}
+
+				.logistica-table tbody tr:nth-child(even) {
+					background: #f8fafc;
 				}
 
 				.logistica-table .col-fecha {
 					width: 60px;
 					max-width: 60px;
 					white-space: nowrap;
+				}
+
+				.logistica-table .col-cantidadCamion,
+				.logistica-table .col-otras,
+				.logistica-table .col-economico,
+				.logistica-table .col-acompanante {
+					width: 70px;
+					max-width: 70px;
 				}
 
 				.logistica-table .print-hide {
@@ -513,7 +556,7 @@
 							<th data-column="operador" data-secondary="true" data-hide="true">Operador</th>
 							<th data-column="acompanante" data-extra="true" data-hide="true">Acompañante</th>
 							<th data-column="empezar" data-extra="true">Empezar a cargar</th>
-							<th data-column="acciones" data-extra="true">Acciones</th>
+							<th data-column="acciones" data-extra="true">&nbsp;</th>
 						</tr>
 					</thead>
 					<tbody id="tableBody"></tbody>
@@ -628,6 +671,7 @@
 				{ key: "unidad", type: "text" },
 				{ key: "operador", type: "text" },
 				{ key: "acompanante", type: "text", extra: true },
+				{ key: "ordenCarga", type: "text", extra: true },
 				{ key: "empezar", type: "datalist", extra: true },
 			];
 
@@ -652,6 +696,7 @@
 				"unidad",
 				"operador",
 				"acompanante",
+				"ordenCarga",
 				"empezar",
 				"cartaPorte",
 				"factura",
@@ -661,9 +706,13 @@
 			const pdfColumnKeys = new Set([
 				"almacen",
 				"destino",
-				"llantas",
+				"cantidadAuto",
+				"cantidadCamion",
+				"otras",
 				"economico",
+				"ordenCarga",
 				"empezar",
+				"acompanante",
 			]);
 
 			let columnsHidden = true;
@@ -771,6 +820,7 @@
 				unidad: pickValue(row, ["Unidad"]),
 				operador: pickValue(row, ["Operador"]),
 				acompanante: pickValue(row, ["Acompañante", "Acompanante"]),
+				ordenCarga: pickValue(row, ["Orden de carga", "orden de carga", "Orden de Carga"]),
 				empezar: pickValue(row, ["Empezar a cargar", "Empezar"]),
 				cartaPorte: pickValue(row, ["carta porte", "Carta porte", "Carta Porte"]),
 				factura: pickValue(row, ["factura", "Factura"]),
@@ -791,6 +841,7 @@
 				"Unidad": row.unidad || "",
 				"Operador": row.operador || "",
 				"Acompañante": row.acompanante || "",
+				"Orden de carga": row.ordenCarga || "",
 				"Empezar a cargar": row.empezar || "",
 				"carta porte": row.cartaPorte || "",
 				"factura": row.factura || "",
@@ -810,6 +861,7 @@
 				"Unidad": row.unidad || "",
 				"Operador": row.operador || "",
 				"Acompañante": row.acompanante || "",
+				"Orden de carga": row.ordenCarga || "",
 				"Empezar a cargar": row.empezar || "",
 			});
 
@@ -1060,6 +1112,10 @@
 					input.placeholder = "0";
 				}
 
+				if (column.key === "empezar") {
+					input.classList.add("wide-input");
+				}
+
 				input.addEventListener("input", saveData);
 
 				if (column.key === "destino") {
@@ -1304,8 +1360,21 @@
 								data[key] = "";
 								return;
 							}
-							const input = cell.querySelector("textarea, input");
-							data[key] = input ? input.value : "";
+							const inputs = Array.from(
+								cell.querySelectorAll("textarea, input")
+							);
+							if (inputs.length === 0) {
+								data[key] = "";
+								return;
+							}
+							if (inputs.length === 1) {
+								data[key] = inputs[0].value || "";
+								return;
+							}
+							data[key] = inputs
+								.map((input) => String(input.value || "").trim())
+								.filter((value) => value !== "")
+								.join(" · ");
 						});
 						return data;
 					})
@@ -1468,7 +1537,7 @@
 				details.forEach((detail) => {
 					const raw = normalizeSearchValue(detail.dataset.fecha || "");
 					const label = normalizeSearchValue(detail.dataset.fechaLabel || "");
-					const isMatch = raw.includes(normalized) || label.includes(normalized);
+					const isMatch = raw === normalized || label === normalized;
 					detail.style.display = isMatch ? "" : "none";
 					detail.open = isMatch;
 					(isMatch ? matches : others).push(detail);
@@ -1528,6 +1597,18 @@
 
 				const joinInline = (items) => items.join(" · ");
 
+				const stackedColumnKeys = new Set([
+					"almacen",
+					"destino",
+					"ubicacion",
+					"coordenadas",
+					"ordenCarga",
+					"cantidadAuto",
+					"cantidadCamion",
+					"otras",
+					"llantas",
+				]);
+
 				const escapeAttr = (value) =>
 					String(value)
 						.replace(/&/g, "&amp;")
@@ -1548,6 +1629,32 @@
 					return `<textarea>${escapeText(value)}</textarea>`;
 				};
 
+				const renderStackedInputs = (value, listId = "", columnKey = "") => {
+					const raw = String(value || "").trim();
+					const parts = raw
+						.split(" · ")
+						.map((part) => part.trim())
+						.filter((part) => part !== "")
+						.map((part) => {
+							if (columnKey !== "almacen") return part;
+							return part.replace(/\s+/g, " · ");
+						});
+					if (parts.length === 0) {
+						return renderInput("", listId);
+					}
+					const fields = parts
+						.map((part) => {
+							if (listId) {
+								return `<input class="stacked-field" type="text" value="${escapeAttr(
+									part
+								)}" list="${listId}" />`;
+							}
+							return `<textarea class="stacked-field">${escapeText(part)}</textarea>`;
+						})
+						.join("");
+					return `<div class="stacked-fields">${fields}</div>`;
+				};
+
 				const renderDelete = () =>
 					`<button type="button" class="danger" data-logistica-delete="true">Eliminar</button>`;
 
@@ -1561,7 +1668,10 @@
 							const printHideClass = pdfColumnKeys.has(columnKey)
 								? ""
 								: " print-hide";
-							const input = renderInput(cell.value, cell.list || "");
+							const isStacked = stackedColumnKeys.has(columnKey);
+							const input = isStacked
+								? renderStackedInputs(cell.value, cell.list || "", columnKey)
+								: renderInput(cell.value, cell.list || "");
 							return `<td${hideAttr} class="col-${columnKey}${printHideClass}${hiddenClass}">${input}</td>`;
 						})
 						.join("");
@@ -1569,26 +1679,30 @@
 				const renderActionCell = () =>
 					`<td class="print-hide">${renderDelete()}</td>`;
 
+				const headerClass = (key, baseClass) =>
+					`${baseClass}${pdfColumnKeys.has(key) ? "" : " print-hide"}`;
+
 				const renderTableHeader = () => `
 					<thead>
 						<tr>
-							<th data-column="fecha" data-secondary="true" class="col-fecha" title="Ocultar columna">Fecha</th>
-							<th data-column="almacen" data-secondary="true" class="col-almacen" title="Ocultar columna">Almacén</th>
-							<th data-column="destino" class="col-destino" title="Ocultar columna">Destino</th>
-							<th data-column="ubicacion" data-secondary="true" data-hide="true" class="print-hide col-ubicacion" title="Ocultar columna">Ubicación</th>
-							<th data-column="coordenadas" data-secondary="true" data-hide="true" class="print-hide col-coordenadas" title="Ocultar columna">Coordenadas</th>
-							<th data-column="cantidadAuto" data-extra="true" class="print-hide col-cantidadAuto" title="Ocultar columna">Cant. Auto</th>
-							<th data-column="cantidadCamion" data-extra="true" class="print-hide col-cantidadCamion" title="Ocultar columna">Cant. Camión</th>
-							<th data-column="otras" data-extra="true" class="print-hide col-otras" title="Ocultar columna">Otras</th>
-							<th data-column="llantas" class="col-llantas" title="Ocultar columna">Llantas</th>
-							<th data-column="economico" class="col-economico" title="Ocultar columna">Económico</th>
-							<th data-column="unidad" data-hide="true" class="print-hide col-unidad" title="Ocultar columna">Unidad</th>
-							<th data-column="operador" data-secondary="true" data-hide="true" class="print-hide col-operador" title="Ocultar columna">Operador</th>
-							<th data-column="acompanante" data-extra="true" data-hide="true" class="print-hide col-acompanante" title="Ocultar columna">Acompañante</th>
-							<th data-column="empezar" data-extra="true" class="col-empezar" title="Ocultar columna">Empezar a cargar</th>
-							<th data-column="cartaPorte" data-extra="true" class="print-hide col-cartaPorte" title="Ocultar columna">Carta porte</th>
-							<th data-column="factura" data-extra="true" class="print-hide col-factura" title="Ocultar columna">Factura</th>
-							<th data-column="traspaso" data-extra="true" class="print-hide col-traspaso" title="Ocultar columna">Traspaso</th>
+							<th data-column="fecha" data-secondary="true" class="${headerClass("fecha", "col-fecha")}" title="Ocultar columna">Fecha</th>
+							<th data-column="almacen" data-secondary="true" class="${headerClass("almacen", "col-almacen")}" title="Ocultar columna">Almacén</th>
+							<th data-column="destino" class="${headerClass("destino", "col-destino")}" title="Ocultar columna">Destino</th>
+							<th data-column="ubicacion" data-secondary="true" data-hide="true" class="${headerClass("ubicacion", "col-ubicacion")}" title="Ocultar columna">Ubicación</th>
+							<th data-column="coordenadas" data-secondary="true" data-hide="true" class="${headerClass("coordenadas", "col-coordenadas")}" title="Ocultar columna">Coordenadas</th>
+							<th data-column="cantidadAuto" data-extra="true" class="${headerClass("cantidadAuto", "col-cantidadAuto")}" title="Ocultar columna">Cant. Auto</th>
+							<th data-column="cantidadCamion" data-extra="true" class="${headerClass("cantidadCamion", "col-cantidadCamion")}" title="Ocultar columna">Cant. Camión</th>
+							<th data-column="otras" data-extra="true" class="${headerClass("otras", "col-otras")}" title="Ocultar columna">Otras</th>
+							<th data-column="llantas" class="${headerClass("llantas", "col-llantas")}" title="Ocultar columna">Llantas</th>
+							<th data-column="economico" class="${headerClass("economico", "col-economico")}" title="Ocultar columna">Económico</th>
+							<th data-column="unidad" data-hide="true" class="${headerClass("unidad", "col-unidad")}" title="Ocultar columna">Unidad</th>
+							<th data-column="operador" data-secondary="true" data-hide="true" class="${headerClass("operador", "col-operador")}" title="Ocultar columna">Operador</th>
+							<th data-column="acompanante" data-extra="true" data-hide="true" class="${headerClass("acompanante", "col-acompanante")}" title="Ocultar columna">Acompañante</th>
+							<th data-column="ordenCarga" data-extra="true" class="${headerClass("ordenCarga", "col-ordenCarga")}" title="Ocultar columna">Orden de carga</th>
+							<th data-column="empezar" data-extra="true" class="${headerClass("empezar", "col-empezar")}" title="Ocultar columna">Empezar a cargar</th>
+							<th data-column="cartaPorte" data-extra="true" class="${headerClass("cartaPorte", "col-cartaPorte")}" title="Ocultar columna">Carta porte</th>
+							<th data-column="factura" data-extra="true" class="${headerClass("factura", "col-factura")}" title="Ocultar columna">Factura</th>
+							<th data-column="traspaso" data-extra="true" class="${headerClass("traspaso", "col-traspaso")}" title="Ocultar columna">Traspaso</th>
 							<th data-extra="true" class="print-hide">Acciones</th>
 						</tr>
 					</thead>
@@ -1611,6 +1725,7 @@
 								cantidadCamion: row.cantidadCamion || "",
 								otras: row.otras || "",
 								acompanante: row.acompanante || "",
+								ordenCarga: row.ordenCarga || "",
 								empezar: row.empezar || "",
 								cartaPorte: row.cartaPorte || "",
 								factura: row.factura || "",
@@ -1637,11 +1752,9 @@
 					const formatAlmacenLabel = (value) => {
 						const clean = (value || "").trim();
 						if (!clean) return "";
-						const withoutPrefix = clean
-							.replace(/^almac[eé]n\s*/i, "")
-							.trim();
-						if (!withoutPrefix) return "";
-						return `Almacén ${withoutPrefix}`;
+						const digits = clean.match(/\d+/g);
+						if (!digits || digits.length === 0) return "";
+						return digits.join("");
 					};
 
 					Array.from(grouped.values()).forEach((row) => {
@@ -1664,10 +1777,12 @@
 								cantidadAuto: [],
 								cantidadCamion: [],
 								otras: [],
+								llantas: [],
 								economicos: [],
 								unidades: [],
 								operadores: [],
 								acompanantes: [],
+								ordenCarga: [],
 								cartaPorte: [],
 								factura: [],
 								traspaso: [],
@@ -1683,7 +1798,9 @@
 						addUnique(entry.cantidadAuto, row.cantidadAuto);
 						addUnique(entry.cantidadCamion, row.cantidadCamion);
 						addUnique(entry.otras, row.otras);
+						addUnique(entry.llantas, row.llantas);
 						addUnique(entry.acompanantes, row.acompanante);
+						addUnique(entry.ordenCarga, row.ordenCarga);
 						addUnique(entry.cartaPorte, row.cartaPorte);
 						addUnique(entry.factura, row.factura);
 						addUnique(entry.traspaso, row.traspaso);
@@ -1705,10 +1822,12 @@
 							cantidadAuto: [],
 							cantidadCamion: [],
 							otras: [],
+							llantas: [],
 							economicos: [],
 							unidades: [],
 							operadores: [],
 							acompanantes: [],
+							ordenCarga: [],
 							cartaPorte: [],
 							factura: [],
 							traspaso: [],
@@ -1725,10 +1844,12 @@
 					addUnique(entry.cantidadAuto, row.cantidadAuto);
 					addUnique(entry.cantidadCamion, row.cantidadCamion);
 					addUnique(entry.otras, row.otras);
+					addUnique(entry.llantas, row.llantas);
 					rowEconomicos.forEach((value) => addUnique(entry.economicos, value));
 					rowUnidades.forEach((value) => addUnique(entry.unidades, value));
 					rowOperadores.forEach((value) => addUnique(entry.operadores, value));
 					addUnique(entry.acompanantes, row.acompanante);
+					addUnique(entry.ordenCarga, row.ordenCarga);
 					addUnique(entry.cartaPorte, row.cartaPorte);
 					addUnique(entry.factura, row.factura);
 					addUnique(entry.traspaso, row.traspaso);
@@ -1745,6 +1866,10 @@
 								sumList(row.cantidadAuto) +
 								sumList(row.cantidadCamion) +
 								sumList(row.otras);
+							const llantasValue =
+								row.llantas && row.llantas.length > 0
+									? joinInline(row.llantas)
+									: "";
 							const cells = [
 								{ value: row.fecha || "" },
 								{ value: joinInline(row.almacenes) },
@@ -1754,11 +1879,12 @@
 								{ value: joinInline(row.cantidadAuto) },
 								{ value: joinInline(row.cantidadCamion) },
 								{ value: joinInline(row.otras) },
-								{ value: llantasTotal > 0 ? String(llantasTotal) : "" },
+								{ value: llantasValue },
 								{ value: joinInline(row.economicos), list: "economicoOpciones" },
 								{ value: joinInline(row.unidades), list: "unidadOpciones" },
 								{ value: joinInline(row.operadores), list: "operadorOpciones" },
 								{ value: joinInline(row.acompanantes) },
+								{ value: joinInline(row.ordenCarga) },
 								{ value: joinInline(row.empezar) },
 								{ value: joinInline(row.cartaPorte) },
 								{ value: joinInline(row.factura) },

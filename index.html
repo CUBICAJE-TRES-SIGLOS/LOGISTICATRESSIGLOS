@@ -19,6 +19,9 @@
 			}
 
 			* {
+			body.logistica-active header .actions {
+				display: none;
+			}
 				box-sizing: border-box;
 				margin: 0;
 				padding: 0;
@@ -183,6 +186,14 @@
 			tbody tr.unit-group-alt {
 				background: rgba(74, 222, 128, 0.18);
 				box-shadow: inset 6px 0 0 rgba(34, 197, 94, 0.95);
+			}
+
+			tbody tr.row-alt {
+				background: rgba(14, 165, 233, 0.08);
+			}
+
+			tbody tr.row-alt-2 {
+				background: rgba(251, 191, 36, 0.14);
 			}
 
 			input[type="text"],
@@ -524,6 +535,9 @@
 					placeholder="Buscar fecha (dd/mm/aaaa)"
 				/>
 				<button class="secondary" id="logisticaSearchBtn">Buscar</button>
+				<button class="secondary" id="logisticaSaveChanges">
+					Guardar cambios
+				</button>
 				<button class="secondary" id="printLogistica">Generar PDF</button>
 				<button class="secondary" id="showLogisticaColumns">
 					Mostrar columnas
@@ -586,6 +600,9 @@
 			const printLogisticaButton = document.getElementById("printLogistica");
 			const logisticaSearchInput = document.getElementById("logisticaSearchDate");
 			const logisticaSearchButton = document.getElementById("logisticaSearchBtn");
+			const logisticaSaveChangesButton = document.getElementById(
+				"logisticaSaveChanges"
+			);
 			const showLogisticaColumnsButton = document.getElementById(
 				"showLogisticaColumns"
 			);
@@ -636,6 +653,9 @@
 				"operador",
 				"acompanante",
 				"empezar",
+				"cartaPorte",
+				"factura",
+				"traspaso",
 			];
 
 			const pdfColumnKeys = new Set([
@@ -654,6 +674,7 @@
 				logisticaSection.classList.toggle("active", isLogistica);
 				tabBorrador.classList.toggle("active", !isLogistica);
 				tabLogistica.classList.toggle("active", isLogistica);
+				document.body.classList.toggle("logistica-active", isLogistica);
 			};
 
 			const setHideableVisibility = (hidden) => {
@@ -679,6 +700,11 @@
 
 			const hasRowContent = (row) =>
 				columns.some((column) => String(row?.[column.key] || "").trim() !== "");
+
+			const hasLogisticaRowContent = (row) =>
+				logisticaColumnKeys.some(
+					(key) => String(row?.[key] || "").trim() !== ""
+				);
 
 			const loadLocalData = () => {
 				const saved = localStorage.getItem(STORAGE_KEY);
@@ -746,6 +772,9 @@
 				operador: pickValue(row, ["Operador"]),
 				acompanante: pickValue(row, ["Acompañante", "Acompanante"]),
 				empezar: pickValue(row, ["Empezar a cargar", "Empezar"]),
+				cartaPorte: pickValue(row, ["carta porte", "Carta porte", "Carta Porte"]),
+				factura: pickValue(row, ["factura", "Factura"]),
+				traspaso: pickValue(row, ["traspaso", "Traspaso"]),
 			});
 
 			const mapDataToSheetRow = (row) => ({
@@ -763,6 +792,9 @@
 				"Operador": row.operador || "",
 				"Acompañante": row.acompanante || "",
 				"Empezar a cargar": row.empezar || "",
+				"carta porte": row.cartaPorte || "",
+				"factura": row.factura || "",
+				"traspaso": row.traspaso || "",
 			});
 
 			const mapDataToSheetRowBorrador = (row) => ({
@@ -1082,6 +1114,18 @@
 				llantasInput.value = total > 0 ? String(total) : "";
 			};
 
+			const updateBorradorRowHighlight = (row) => {
+				if (!row) return;
+				const inputs = Array.from(row.querySelectorAll("input[data-key]"));
+				const hasValue = inputs.some((input) =>
+					String(input.value || "").trim() !== ""
+				);
+				row.classList.toggle("unit-group", hasValue);
+				if (!hasValue) {
+					row.classList.remove("unit-group-alt");
+				}
+			};
+
 			const getRowDataFromRow = (row) => {
 				const data = {};
 				columns.forEach((column) => {
@@ -1160,7 +1204,9 @@
 							cell.classList.add("hidden-column");
 						}
 					}
-					cell.appendChild(createInput(column, rowData[column.key] || ""));
+					const input = createInput(column, rowData[column.key] || "");
+					input.addEventListener("input", () => updateBorradorRowHighlight(row));
+					cell.appendChild(input);
 					row.appendChild(cell);
 				});
 
@@ -1194,14 +1240,32 @@
 						addRow();
 					}
 					saveData();
+					applyBorradorRowColors();
 				});
 				actions.appendChild(deleteButton);
 				actionsCell.appendChild(actions);
 				row.appendChild(actionsCell);
 
 				applyUnitGroup(row, groupId);
+				updateBorradorRowHighlight(row);
 
 				return row;
+			};
+
+			const applyBorradorRowColors = () => {
+				let visibleIndex = 0;
+				Array.from(tableBody.querySelectorAll("tr")).forEach((row) => {
+					row.classList.remove("row-alt", "row-alt-2");
+					if (row.classList.contains("unit-group")) {
+						return;
+					}
+					if (visibleIndex % 2 === 0) {
+						row.classList.add("row-alt");
+					} else {
+						row.classList.add("row-alt-2");
+					}
+					visibleIndex += 1;
+				});
 			};
 
 			const addRow = (rowData = {}, options = {}) => {
@@ -1213,6 +1277,7 @@
 				}
 				updateLlantasValue(row);
 				saveData();
+				applyBorradorRowColors();
 				return row;
 			};
 
@@ -1245,6 +1310,24 @@
 						return data;
 					})
 				);
+
+			const saveLogisticaChanges = async () => {
+				const rows = getLogisticaRowsFromTable().filter((row) =>
+					hasLogisticaRowContent(row)
+				);
+				try {
+					await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows);
+					await loadLogisticaData();
+					renderLogistica(getLogisticaRowsForView());
+					return true;
+				} catch (error) {
+					console.error("No se pudo guardar cambios de logística", error);
+					alert(
+						`No se pudo guardar cambios. ${error?.message || "Intenta de nuevo."}`
+					);
+					return false;
+				}
+			};
 
 			const getLogisticaRowsForView = () => {
 				if (logisticaRowsFromApi.length > 0) return logisticaRowsFromApi;
@@ -1422,7 +1505,7 @@
 				if (logisticaTitle) {
 					const titleSuffix =
 						uniqueFechas.length > 1
-							? "Varias fechas"
+							? " "
 							: uniqueFechas[0]
 								? getDateLabel(uniqueFechas[0])
 								: dateLabel;
@@ -1503,6 +1586,9 @@
 							<th data-column="operador" data-secondary="true" data-hide="true" class="print-hide col-operador" title="Ocultar columna">Operador</th>
 							<th data-column="acompanante" data-extra="true" data-hide="true" class="print-hide col-acompanante" title="Ocultar columna">Acompañante</th>
 							<th data-column="empezar" data-extra="true" class="col-empezar" title="Ocultar columna">Empezar a cargar</th>
+							<th data-column="cartaPorte" data-extra="true" class="print-hide col-cartaPorte" title="Ocultar columna">Carta porte</th>
+							<th data-column="factura" data-extra="true" class="print-hide col-factura" title="Ocultar columna">Factura</th>
+							<th data-column="traspaso" data-extra="true" class="print-hide col-traspaso" title="Ocultar columna">Traspaso</th>
 							<th data-extra="true" class="print-hide">Acciones</th>
 						</tr>
 					</thead>
@@ -1526,6 +1612,9 @@
 								otras: row.otras || "",
 								acompanante: row.acompanante || "",
 								empezar: row.empezar || "",
+								cartaPorte: row.cartaPorte || "",
+								factura: row.factura || "",
+								traspaso: row.traspaso || "",
 								unidades: [],
 							});
 						}
@@ -1579,6 +1668,9 @@
 								unidades: [],
 								operadores: [],
 								acompanantes: [],
+								cartaPorte: [],
+								factura: [],
+								traspaso: [],
 								empezar: [],
 							});
 						}
@@ -1592,6 +1684,9 @@
 						addUnique(entry.cantidadCamion, row.cantidadCamion);
 						addUnique(entry.otras, row.otras);
 						addUnique(entry.acompanantes, row.acompanante);
+						addUnique(entry.cartaPorte, row.cartaPorte);
+						addUnique(entry.factura, row.factura);
+						addUnique(entry.traspaso, row.traspaso);
 						addUnique(entry.empezar, row.empezar);
 						return;
 					}
@@ -1614,6 +1709,9 @@
 							unidades: [],
 							operadores: [],
 							acompanantes: [],
+							cartaPorte: [],
+							factura: [],
+							traspaso: [],
 								empezar: [],
 							});
 					}
@@ -1631,6 +1729,9 @@
 					rowUnidades.forEach((value) => addUnique(entry.unidades, value));
 					rowOperadores.forEach((value) => addUnique(entry.operadores, value));
 					addUnique(entry.acompanantes, row.acompanante);
+					addUnique(entry.cartaPorte, row.cartaPorte);
+					addUnique(entry.factura, row.factura);
+					addUnique(entry.traspaso, row.traspaso);
 					addUnique(entry.empezar, row.empezar);
 					});
 
@@ -1659,6 +1760,9 @@
 								{ value: joinInline(row.operadores), list: "operadorOpciones" },
 								{ value: joinInline(row.acompanantes) },
 								{ value: joinInline(row.empezar) },
+								{ value: joinInline(row.cartaPorte) },
+								{ value: joinInline(row.factura) },
+								{ value: joinInline(row.traspaso) },
 							];
 							return `<tr>${renderCells(cells)}${renderActionCell()}</tr>`;
 						})
@@ -1789,6 +1893,10 @@
 				applyLogisticaColumnVisibility();
 			});
 
+			logisticaSaveChangesButton?.addEventListener("click", () => {
+				saveLogisticaChanges();
+			});
+
 			const handleLogisticaSearch = () => {
 				applyLogisticaSearch(logisticaSearchInput?.value || "");
 			};
@@ -1798,7 +1906,7 @@
 
 			printLogisticaButton.addEventListener("click", () => {
 				const tableRows = getLogisticaRowsFromTable().filter((row) =>
-					hasRowContent(row)
+					hasLogisticaRowContent(row)
 				);
 				renderLogistica(tableRows.length > 0 ? tableRows : getLogisticaRowsForView());
 				switchTab("logistica");
@@ -1816,7 +1924,7 @@
 				restoreDestinoAfterPrint();
 			});
 
-			logisticaLists?.addEventListener("click", (event) => {
+			logisticaLists?.addEventListener("click", async (event) => {
 				const target = event.target;
 				if (!(target instanceof HTMLElement)) return;
 				const header = target.closest("th[data-column]");
@@ -1835,6 +1943,7 @@
 				if (target.matches("[data-logistica-delete='true']")) {
 					const row = target.closest("tr");
 					if (row) row.remove();
+					await saveLogisticaChanges();
 				}
 			});
 

@@ -296,6 +296,10 @@
 				display: none;
 			}
 
+			.print-only {
+				display: none;
+			}
+
 			.footer-note {
 				margin-top: 12px;
 				font-size: 12px;
@@ -628,10 +632,25 @@
 					max-width: 70px;
 				}
 
-				.logistica-table .col-llantas,
+				.logistica-table .col-llantas {
+					width: 60px;
+					max-width: 60px;
+				}
+
+				.logistica-table .col-ordenCarga,
 				.logistica-table .col-empezar {
-					width: 90px;
-					max-width: 90px;
+					width: 60px;
+					max-width: 60px;
+				}
+
+				.logistica-table .col-economico input {
+					display: none;
+				}
+
+				.print-only {
+					display: block;
+					white-space: normal;
+					word-break: break-word;
 				}
 
 				.logistica-table .print-hide {
@@ -2042,7 +2061,11 @@
 							const input = isStacked
 								? renderStackedInputs(cell.value, cell.list || "", columnKey)
 								: renderInput(cell.value, cell.list || "");
-							return `<td${hideAttr} class="col-${columnKey}${printHideClass}${hiddenClass}">${input}</td>`;
+							const printOnly =
+								columnKey === "economico"
+									? `<div class="print-only">${escapeText(cell.value)}</div>`
+									: "";
+							return `<td${hideAttr} class="col-${columnKey}${printHideClass}${hiddenClass}">${input}${printOnly}</td>`;
 						})
 						.join("");
 

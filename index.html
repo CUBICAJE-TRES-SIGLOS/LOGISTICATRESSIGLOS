@@ -80,6 +80,55 @@
 				margin-top: 8px;
 			}
 
+			body.logistica-active #borradorColumnPanel {
+				display: none !important;
+			}
+
+			.column-panel {
+				display: none;
+				margin-top: 10px;
+				padding: 10px 12px;
+				border: 1px dashed var(--border);
+				border-radius: 12px;
+				background: #f8fafc;
+				gap: 8px;
+			}
+
+			.column-panel.open {
+				display: grid;
+			}
+
+			.column-panel-title {
+				font-size: 12px;
+				font-weight: 700;
+				color: var(--muted);
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+			}
+
+			.column-panel-summary {
+				font-size: 12px;
+				color: var(--muted);
+			}
+
+			.column-toggle-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px 16px;
+			}
+
+			.column-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 13px;
+				color: var(--text);
+			}
+
+			.column-toggle input {
+				accent-color: var(--accent);
+			}
+
 			.actions .search-field {
 				min-width: 200px;
 				max-width: 240px;
@@ -154,6 +203,11 @@
 				width: 100%;
 				border-collapse: collapse;
 				min-width: 1200px;
+			}
+
+			.logistica-table {
+				table-layout: fixed;
+				min-width: 1600px;
 			}
 
 			thead th {
@@ -258,9 +312,9 @@
 
 			.logistica-table th,
 			.logistica-table td {
-				white-space: normal;
+				white-space: nowrap;
 				vertical-align: top;
-				padding: 8px 10px;
+				padding: 10px 12px;
 			}
 
 			.accordion-item {
@@ -333,6 +387,19 @@
 			.logistica-table .col-destino {
 				max-width: 220px;
 				width: 220px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.logistica-table .col-almacen,
+			.logistica-table .col-cantidadAuto {
+				max-width: 60px;
+				width: 60px;
+			}
+
+			.logistica-table .col-otras {
+				max-width: 70px;
+				width: 70px;
 			}
 
 			.logistica-table .col-cantidadCamion,
@@ -343,6 +410,11 @@
 				width: 90px;
 			}
 
+			.logistica-table .col-ordenCarga {
+				max-width: 110px;
+				width: 110px;
+			}
+
 			.logistica-table .col-fecha {
 				max-width: 70px;
 				width: 70px;
@@ -350,16 +422,22 @@
 			}
 
 			.logistica-table input[type="text"] {
-				min-width: 150px;
+				min-width: 0;
+				width: 100%;
+				font-size: 13px;
+				padding: 6px 8px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
 			}
 
 			.logistica-table textarea {
 				width: 100%;
-				min-height: 36px;
+				min-height: 32px;
 				border: 1px solid var(--border);
 				border-radius: 8px;
 				padding: 6px 8px;
-				font-size: 14px;
+				font-size: 13px;
 				background: #fff;
 				color: var(--text);
 				resize: none;
@@ -371,6 +449,55 @@
 				gap: 6px;
 			}
 
+			.logistica-table .col-destino .stacked-field,
+			.logistica-table .col-destino input,
+			.logistica-table .col-destino textarea {
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.logistica-table .col-destino .stacked-field-row {
+				display: grid;
+				grid-template-columns: 28px 1fr;
+				align-items: center;
+				gap: 6px;
+			}
+
+			.logistica-table .col-destino .stacked-field-row::before {
+				content: attr(data-index) ".-";
+				font-size: 12px;
+				font-weight: 600;
+				color: var(--muted);
+			}
+
+			.logistica-table .col-destino .destino-compact {
+				display: grid;
+				gap: 6px;
+			}
+
+			.logistica-table .col-destino .destino-toggle {
+				display: block;
+				width: 100%;
+				border: 1px dashed var(--border);
+				background: #f8fafc;
+				color: var(--text);
+				padding: 6px 8px;
+				border-radius: 8px;
+				font-size: 13px;
+				font-weight: 600;
+				text-align: left;
+				cursor: pointer;
+			}
+
+			.logistica-table .col-destino .destino-details {
+				display: none;
+			}
+
+			.logistica-table .col-destino .destino-compact.is-open .destino-details {
+				display: grid;
+			}
+
 			.logistica-table .stacked-field {
 				min-height: 28px;
 			}
@@ -380,10 +507,27 @@
 				padding: 6px 8px;
 			}
 
+			.logistica-table .col-ordenCarga input[type="text"] {
+				min-width: 0;
+				width: 100%;
+			}
+
 			@media print {
 				@page {
-					size: A4 landscape;
+					size: A4 portrait;
 					margin: 6mm;
+				}
+
+				.column-panel {
+					display: none !important;
+				}
+
+				.logistica-table .col-destino .destino-toggle {
+					display: none !important;
+				}
+
+				.logistica-table .col-destino .destino-details {
+					display: grid !important;
 				}
 
 				body {
@@ -465,12 +609,29 @@
 					white-space: nowrap;
 				}
 
+				.logistica-table .col-almacen,
+				.logistica-table .col-cantidadAuto {
+					width: 52px;
+					max-width: 52px;
+				}
+
+				.logistica-table .col-otras {
+					width: 60px;
+					max-width: 60px;
+				}
+
 				.logistica-table .col-cantidadCamion,
 				.logistica-table .col-otras,
 				.logistica-table .col-economico,
 				.logistica-table .col-acompanante {
 					width: 70px;
 					max-width: 70px;
+				}
+
+				.logistica-table .col-llantas,
+				.logistica-table .col-empezar {
+					width: 90px;
+					max-width: 90px;
 				}
 
 				.logistica-table .print-hide {
@@ -508,6 +669,21 @@
 					overflow: visible;
 				}
 
+				.logistica-table .stacked-fields {
+					display: grid;
+					gap: 2px;
+				}
+
+				.logistica-table .stacked-field {
+					display: block;
+					padding: 0 2px;
+				}
+
+				.logistica-table .col-almacen .stacked-field {
+					text-align: center;
+					min-height: 12px;
+				}
+
 				.hidden-column {
 					display: none !important;
 				}
@@ -536,6 +712,11 @@
 				<button class="secondary" id="toggleColumns">Mostrar columnas ocultas</button>
 				<button class="secondary" id="clearTable">Borrar todo</button>
 			</div>
+			<div class="column-panel" id="borradorColumnPanel" aria-hidden="true">
+				<div class="column-panel-title">Columnas ocultas</div>
+				<div class="column-panel-summary" id="borradorColumnSummary"></div>
+				<div class="column-toggle-list" id="borradorColumnToggles"></div>
+			</div>
 		</header>
 
 		<section class="table-card tab-section active" id="borradorSection">
@@ -550,13 +731,13 @@
 							<th data-column="cantidadAuto" data-extra="true">Cant. Auto</th>
 							<th data-column="cantidadCamion" data-extra="true">Cant. Camión</th>
 							<th data-column="otras" data-extra="true">Otras</th>
-							<th data-column="llantas" data-extra="true">Llantas</th>
+							<th data-column="llantas" data-extra="true" data-hide="true">Llantas</th>
 							<th data-column="economico">Económico</th>
 							<th data-column="unidad" data-hide="true">Unidad</th>
 							<th data-column="operador" data-secondary="true" data-hide="true">Operador</th>
 							<th data-column="acompanante" data-extra="true" data-hide="true">Acompañante</th>
-							<th data-column="empezar" data-extra="true">Empezar a cargar</th>
-							<th data-column="acciones" data-extra="true">&nbsp;</th>
+							<th data-column="empezar" data-extra="true">Orden de la carga</th>
+							<th data-column="acciones" data-extra="true">Empezar a cargar</th>
 						</tr>
 					</thead>
 					<tbody id="tableBody"></tbody>
@@ -585,6 +766,11 @@
 				<button class="secondary" id="showLogisticaColumns">
 					Mostrar columnas
 				</button>
+			</div>
+			<div class="column-panel" id="logisticaColumnPanel" aria-hidden="true">
+				<div class="column-panel-title">Columnas visibles</div>
+				<div class="column-panel-summary" id="logisticaColumnSummary"></div>
+				<div class="column-toggle-list" id="logisticaColumnToggles"></div>
 			</div>
 			<p class="footer-note" id="pdfColumnsNote"></p>
 			<div id="logisticaLists"></div>
@@ -649,6 +835,22 @@
 			const showLogisticaColumnsButton = document.getElementById(
 				"showLogisticaColumns"
 			);
+			const logisticaColumnPanel = document.getElementById(
+				"logisticaColumnPanel"
+			);
+			const logisticaColumnSummary = document.getElementById(
+				"logisticaColumnSummary"
+			);
+			const logisticaColumnToggles = document.getElementById(
+				"logisticaColumnToggles"
+			);
+			const borradorColumnPanel = document.getElementById("borradorColumnPanel");
+			const borradorColumnSummary = document.getElementById(
+				"borradorColumnSummary"
+			);
+			const borradorColumnToggles = document.getElementById(
+				"borradorColumnToggles"
+			);
 
 			const STORAGE_KEY = "cubicaje-hoja-libre";
 			const STORAGE_LOGISTICA = "cubicaje-logistica-dia";
@@ -675,12 +877,27 @@
 				{ key: "empezar", type: "datalist", extra: true },
 			];
 
-			const hideableKeys = new Set([
+			const logisticaHideableKeys = new Set([
 				"ubicacion",
 				"coordenadas",
 				"unidad",
 				"operador",
 				"acompanante",
+			]);
+			const borradorHideableKeys = new Set([
+				"ubicacion",
+				"coordenadas",
+				"llantas",
+				"unidad",
+				"operador",
+				"acompanante",
+			]);
+			const borradorHiddenColumns = new Set([
+				"ubicacion",
+				"coordenadas",
+				"llantas",
+				"unidad",
+				"operador",
 			]);
 			const logisticaColumnKeys = [
 				"fecha",
@@ -706,13 +923,10 @@
 			const pdfColumnKeys = new Set([
 				"almacen",
 				"destino",
-				"cantidadAuto",
-				"cantidadCamion",
-				"otras",
+				"llantas",
 				"economico",
 				"ordenCarga",
 				"empezar",
-				"acompanante",
 			]);
 
 			let columnsHidden = true;
@@ -724,16 +938,87 @@
 				tabBorrador.classList.toggle("active", !isLogistica);
 				tabLogistica.classList.toggle("active", isLogistica);
 				document.body.classList.toggle("logistica-active", isLogistica);
+				if (isLogistica && borradorColumnPanel) {
+					borradorColumnPanel.classList.remove("open");
+					borradorColumnPanel.setAttribute("aria-hidden", "true");
+					toggleColumnsButton.textContent = "Mostrar columnas ocultas";
+				}
 			};
 
-			const setHideableVisibility = (hidden) => {
-				columnsHidden = hidden;
-				document.querySelectorAll("[data-hide='true']").forEach((cell) => {
-					cell.classList.toggle("hidden-column", hidden);
+			const getBorradorColumnKeys = () =>
+				Array.from(
+					borradorSection?.querySelectorAll("th[data-column]") || []
+				).map((header) => header.dataset.column).filter(Boolean);
+
+			const applyBorradorColumnVisibility = () => {
+				const headers = Array.from(
+					borradorSection?.querySelectorAll("thead th[data-column]") || []
+				);
+				const indexMap = new Map();
+				headers.forEach((header, index) => {
+					const key = header.dataset.column;
+					if (!key) return;
+					indexMap.set(key, index);
 				});
-				toggleColumnsButton.textContent = hidden
-					? "Mostrar columnas ocultas"
-					: "Ocultar columnas ocultas";
+				getBorradorColumnKeys().forEach((key) => {
+					const hidden = borradorHiddenColumns.has(key);
+					borradorSection
+						?.querySelectorAll(`[data-column="${key}"]`)
+						.forEach((cell) => {
+							cell.classList.toggle("hidden-column", hidden);
+						});
+					const columnIndex = indexMap.get(key);
+					if (columnIndex === undefined) return;
+					Array.from(tableBody?.querySelectorAll("tr") || []).forEach((row) => {
+						const cell = row.children[columnIndex];
+						if (!cell) return;
+						cell.classList.toggle("hidden-column", hidden);
+					});
+				});
+			};
+
+			const getBorradorColumnLabel = (key) => {
+				const header = borradorSection?.querySelector(
+					`th[data-column="${key}"]`
+				);
+				return header ? header.textContent.trim() : key;
+			};
+
+			const updateBorradorColumnSummary = () => {
+				if (!borradorColumnSummary) return;
+				const hidden = Array.from(borradorHiddenColumns)
+					.map((key) => getBorradorColumnLabel(key))
+					.filter(Boolean);
+				borradorColumnSummary.textContent = hidden.length
+					? `Ocultas: ${hidden.join(", ")}`
+					: "Ocultas: ninguna";
+			};
+
+			const renderBorradorColumnToggles = () => {
+				if (!borradorColumnToggles) return;
+				borradorColumnToggles.innerHTML = "";
+				getBorradorColumnKeys().forEach((key) => {
+					const label = document.createElement("label");
+					label.className = "column-toggle";
+					const checkbox = document.createElement("input");
+					checkbox.type = "checkbox";
+					checkbox.checked = !borradorHiddenColumns.has(key);
+					checkbox.addEventListener("change", () => {
+						if (checkbox.checked) {
+							borradorHiddenColumns.delete(key);
+						} else {
+							borradorHiddenColumns.add(key);
+						}
+						applyBorradorColumnVisibility();
+						updateBorradorColumnSummary();
+					});
+					const text = document.createElement("span");
+					text.textContent = getBorradorColumnLabel(key);
+					label.appendChild(checkbox);
+					label.appendChild(text);
+					borradorColumnToggles.appendChild(label);
+				});
+				updateBorradorColumnSummary();
 			};
 
 
@@ -841,7 +1126,7 @@
 				"Unidad": row.unidad || "",
 				"Operador": row.operador || "",
 				"Acompañante": row.acompanante || "",
-				"Orden de carga": row.ordenCarga || "",
+				"orden de carga": row.ordenCarga || "",
 				"Empezar a cargar": row.empezar || "",
 				"carta porte": row.cartaPorte || "",
 				"factura": row.factura || "",
@@ -861,7 +1146,7 @@
 				"Unidad": row.unidad || "",
 				"Operador": row.operador || "",
 				"Acompañante": row.acompanante || "",
-				"Orden de carga": row.ordenCarga || "",
+				"orden de carga": row.ordenCarga || "",
 				"Empezar a cargar": row.empezar || "",
 			});
 
@@ -1254,9 +1539,10 @@
 
 				columns.forEach((column) => {
 					const cell = document.createElement("td");
-					if (hideableKeys.has(column.key)) {
+					cell.dataset.column = column.key;
+					if (borradorHideableKeys.has(column.key)) {
 						cell.dataset.hide = "true";
-						if (columnsHidden) {
+						if (borradorHiddenColumns.has(column.key)) {
 							cell.classList.add("hidden-column");
 						}
 					}
@@ -1284,6 +1570,10 @@
 				}
 
 				const actionsCell = document.createElement("td");
+				actionsCell.dataset.column = "acciones";
+				if (borradorHiddenColumns.has("acciones")) {
+					actionsCell.classList.add("hidden-column");
+				}
 				const actions = document.createElement("div");
 				actions.className = "row-actions";
 				const deleteButton = document.createElement("button");
@@ -1331,6 +1621,8 @@
 				} else {
 					tableBody.appendChild(row);
 				}
+				applyBorradorColumnVisibility();
+				updateBorradorColumnSummary();
 				updateLlantasValue(row);
 				saveData();
 				applyBorradorRowColors();
@@ -1384,10 +1676,25 @@
 				const rows = getLogisticaRowsFromTable().filter((row) =>
 					hasLogisticaRowContent(row)
 				);
+				if (rows.length === 0) {
+					alert("No hay datos para guardar.");
+					return false;
+				}
 				try {
-					await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows);
-					await loadLogisticaData();
-					renderLogistica(getLogisticaRowsForView());
+					try {
+						await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows);
+					} catch (error) {
+						console.warn("Fallo limpieza, se intenta agregar", error);
+						await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows, null, {
+							clearFirst: false,
+						});
+					}
+					logisticaRowsFromApi = rows;
+					localStorage.setItem(STORAGE_LOGISTICA, JSON.stringify(rows));
+					renderLogistica(rows);
+					loadLogisticaData().catch((error) =>
+						console.error("Error al recargar logística", error)
+					);
 					return true;
 				} catch (error) {
 					console.error("No se pudo guardar cambios de logística", error);
@@ -1498,6 +1805,51 @@
 							header.classList.toggle("hidden-column", hidden);
 						});
 				});
+			};
+
+			const getLogisticaColumnLabel = (key) => {
+				const header = logisticaLists?.querySelector(
+					`th[data-column="${key}"]`
+				);
+				return header ? header.textContent.trim() : key;
+			};
+
+			const updateLogisticaColumnSummary = () => {
+				if (!logisticaColumnSummary) return;
+				const hidden = logisticaColumnKeys
+					.filter((key) => logisticaHiddenColumns.has(key))
+					.map((key) => getLogisticaColumnLabel(key))
+					.filter(Boolean);
+				logisticaColumnSummary.textContent = hidden.length
+					? `Ocultas: ${hidden.join(", ")}`
+					: "Ocultas: ninguna";
+			};
+
+			const renderLogisticaColumnToggles = () => {
+				if (!logisticaColumnToggles) return;
+				logisticaColumnToggles.innerHTML = "";
+				logisticaColumnKeys.forEach((key) => {
+					const label = document.createElement("label");
+					label.className = "column-toggle";
+					const checkbox = document.createElement("input");
+					checkbox.type = "checkbox";
+					checkbox.checked = !logisticaHiddenColumns.has(key);
+					checkbox.addEventListener("change", () => {
+						if (checkbox.checked) {
+							logisticaHiddenColumns.delete(key);
+						} else {
+							logisticaHiddenColumns.add(key);
+						}
+						applyLogisticaColumnVisibility();
+						updateLogisticaColumnSummary();
+					});
+					const text = document.createElement("span");
+					text.textContent = getLogisticaColumnLabel(key);
+					label.appendChild(checkbox);
+					label.appendChild(text);
+					logisticaColumnToggles.appendChild(label);
+				});
+				updateLogisticaColumnSummary();
 			};
 
 			const getDateLabel = (sourceDate = null) => {
@@ -1622,6 +1974,13 @@
 						.replace(/</g, "&lt;")
 						.replace(/>/g, "&gt;");
 
+				const buildDestinoSummary = (parts) => {
+					if (!parts || parts.length === 0) return "";
+					const first = parts[0];
+					const extra = parts.length - 1;
+					return extra > 0 ? `${first} +${extra}` : first;
+				};
+
 				const renderInput = (value, listId = "") => {
 					if (listId) {
 						return `<input type="text" value="${escapeAttr(value)}" list="${listId}" />`;
@@ -1643,16 +2002,27 @@
 						return renderInput("", listId);
 					}
 					const fields = parts
-						.map((part) => {
-							if (listId) {
-								return `<input class="stacked-field" type="text" value="${escapeAttr(
-									part
-								)}" list="${listId}" />`;
-							}
-							return `<textarea class="stacked-field">${escapeText(part)}</textarea>`;
+						.map((part, index) => {
+							const field = listId
+								? `<input class="stacked-field" type="text" value="${escapeAttr(
+										part
+									)}" list="${listId}" />`
+								: `<textarea class="stacked-field">${escapeText(part)}</textarea>`;
+							if (columnKey !== "destino") return field;
+							return `<div class="stacked-field-row" data-index="${index + 1}">${field}</div>`;
 						})
 						.join("");
-					return `<div class="stacked-fields">${fields}</div>`;
+					const stackedFields = `<div class="stacked-fields">${fields}</div>`;
+					if (columnKey !== "destino" || parts.length === 1) {
+						return stackedFields;
+					}
+					const summary = escapeText(buildDestinoSummary(parts));
+					return `
+						<div class="destino-compact">
+							<button type="button" class="destino-toggle" data-destino-toggle="true" aria-expanded="false">${summary}</button>
+							<div class="destino-details" aria-hidden="true">${stackedFields}</div>
+						</div>
+					`;
 				};
 
 				const renderDelete = () =>
@@ -1662,7 +2032,7 @@
 					cells
 						.map((cell, index) => {
 							const columnKey = logisticaColumnKeys[index] || "";
-							const shouldHide = hideableKeys.has(columnKey);
+							const shouldHide = logisticaHideableKeys.has(columnKey);
 							const hiddenClass = shouldHide && columnsHidden ? " hidden-column" : "";
 							const hideAttr = shouldHide ? " data-hide=\"true\"" : "";
 							const printHideClass = pdfColumnKeys.has(columnKey)
@@ -1869,7 +2239,9 @@
 							const llantasValue =
 								row.llantas && row.llantas.length > 0
 									? joinInline(row.llantas)
-									: "";
+									: llantasTotal > 0
+										? String(llantasTotal)
+										: "";
 							const cells = [
 								{ value: row.fecha || "" },
 								{ value: joinInline(row.almacenes) },
@@ -1914,6 +2286,7 @@
 						</details>
 					`;
 					applyLogisticaColumnVisibility();
+					updateLogisticaColumnSummary();
 					autoResizeLogisticaTextareas();
 					return;
 				}
@@ -1938,6 +2311,7 @@
 
 				logisticaLists.innerHTML = detailsBlocks;
 				applyLogisticaColumnVisibility();
+				updateLogisticaColumnSummary();
 				autoResizeLogisticaTextareas();
 				applyLogisticaSearch(logisticaSearchInput?.value || "");
 			};
@@ -1951,47 +2325,30 @@
 				});
 			};
 
-			const truncateWords = (text, maxWords) => {
-				const words = String(text || "")
-					.trim()
-					.split(/\s+/)
-					.filter(Boolean);
-				return words.slice(0, maxWords).join(" ");
-			};
-
 			const applyDestinoPrintTruncate = () => {
 				getLogisticaBodies().forEach((body) => {
-					const destinoCells = body.querySelectorAll("tr td:nth-child(3)");
-					destinoCells.forEach((cell) => {
-						const input = cell.querySelector("textarea, input");
-						if (!input) return;
-						const current = input.value || input.textContent || "";
-						if (!input.dataset.fullText) {
-							input.dataset.fullText = current;
-						}
-						const truncated = truncateWords(input.dataset.fullText, 3);
-						if ("value" in input) {
-							input.value = truncated;
-						} else {
-							input.textContent = truncated;
-						}
+					body.querySelectorAll(".destino-compact").forEach((wrapper) => {
+						if (wrapper.classList.contains("is-open")) return;
+						wrapper.dataset.printWasClosed = "true";
+						wrapper.classList.add("is-open");
+						const toggle = wrapper.querySelector("[data-destino-toggle='true']");
+						if (toggle) toggle.setAttribute("aria-expanded", "true");
+						const details = wrapper.querySelector(".destino-details");
+						if (details) details.setAttribute("aria-hidden", "false");
 					});
 				});
 			};
 
 			const restoreDestinoAfterPrint = () => {
 				getLogisticaBodies().forEach((body) => {
-					const destinoCells = body.querySelectorAll("tr td:nth-child(3)");
-					destinoCells.forEach((cell) => {
-						const input = cell.querySelector("textarea, input");
-						if (!input || !input.dataset.fullText) return;
-						const original = input.dataset.fullText;
-						if ("value" in input) {
-							input.value = original;
-						} else {
-							input.textContent = original;
-						}
-						delete input.dataset.fullText;
+					body.querySelectorAll(".destino-compact").forEach((wrapper) => {
+						if (wrapper.dataset.printWasClosed !== "true") return;
+						wrapper.classList.remove("is-open");
+						delete wrapper.dataset.printWasClosed;
+						const toggle = wrapper.querySelector("[data-destino-toggle='true']");
+						if (toggle) toggle.setAttribute("aria-expanded", "false");
+						const details = wrapper.querySelector(".destino-details");
+						if (details) details.setAttribute("aria-hidden", "true");
 					});
 				});
 				autoResizeLogisticaTextareas();
@@ -2015,12 +2372,23 @@
 			});
 
 			showLogisticaColumnsButton?.addEventListener("click", () => {
-				logisticaHiddenColumns.clear();
-				applyLogisticaColumnVisibility();
+				const isOpen = logisticaColumnPanel?.classList.toggle("open");
+				if (logisticaColumnPanel) {
+					logisticaColumnPanel.setAttribute("aria-hidden", String(!isOpen));
+				}
+				showLogisticaColumnsButton.textContent = isOpen
+					? "Ocultar lista"
+					: "Mostrar columnas";
+				if (isOpen) {
+					renderLogisticaColumnToggles();
+				}
 			});
 
-			logisticaSaveChangesButton?.addEventListener("click", () => {
-				saveLogisticaChanges();
+			logisticaSaveChangesButton?.addEventListener("click", async () => {
+				const saved = await saveLogisticaChanges();
+				if (saved) {
+					alert("Cambios guardados en la base.");
+				}
 			});
 
 			const handleLogisticaSearch = () => {
@@ -2053,6 +2421,16 @@
 			logisticaLists?.addEventListener("click", async (event) => {
 				const target = event.target;
 				if (!(target instanceof HTMLElement)) return;
+				const destinoToggle = target.closest("[data-destino-toggle='true']");
+				if (destinoToggle) {
+					const wrapper = destinoToggle.closest(".destino-compact");
+					if (!wrapper) return;
+					const isOpen = wrapper.classList.toggle("is-open");
+					destinoToggle.setAttribute("aria-expanded", String(isOpen));
+					const details = wrapper.querySelector(".destino-details");
+					if (details) details.setAttribute("aria-hidden", String(!isOpen));
+					return;
+				}
 				const header = target.closest("th[data-column]");
 				if (header) {
 					const key = header.dataset.column;
@@ -2082,7 +2460,16 @@
 			});
 
 			toggleColumnsButton.addEventListener("click", () => {
-				setHideableVisibility(!columnsHidden);
+				const isOpen = borradorColumnPanel?.classList.toggle("open");
+				if (borradorColumnPanel) {
+					borradorColumnPanel.setAttribute("aria-hidden", String(!isOpen));
+				}
+				toggleColumnsButton.textContent = isOpen
+					? "Ocultar lista de columnas"
+					: "Mostrar columnas ocultas";
+				if (isOpen) {
+					renderBorradorColumnToggles();
+				}
 			});
 
 
@@ -2124,7 +2511,8 @@
 			});
 
 			formatDate();
-			setHideableVisibility(true);
+			applyBorradorColumnVisibility();
+			renderBorradorColumnToggles();
 			loadDestinoData();
 			loadFlotaData();
 			loadData().catch((error) => console.error("Error al cargar", error));

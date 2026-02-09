@@ -613,19 +613,18 @@
 					white-space: nowrap;
 				}
 
-				.logistica-table .col-almacen,
-				.logistica-table .col-cantidadAuto {
+				.logistica-table .col-almacen {
 					width: 52px;
 					max-width: 52px;
 				}
 
+				.logistica-table .col-cantidadAuto,
+				.logistica-table .col-cantidadCamion,
 				.logistica-table .col-otras {
-					width: 60px;
-					max-width: 60px;
+					width: 44px;
+					max-width: 44px;
 				}
 
-				.logistica-table .col-cantidadCamion,
-				.logistica-table .col-otras,
 				.logistica-table .col-economico,
 				.logistica-table .col-acompanante {
 					width: 70px;
@@ -635,6 +634,11 @@
 				.logistica-table .col-llantas {
 					width: 60px;
 					max-width: 60px;
+				}
+
+				.logistica-table .col-destino {
+					width: 140px;
+					max-width: 140px;
 				}
 
 				.logistica-table .col-ordenCarga,
@@ -942,7 +946,9 @@
 			const pdfColumnKeys = new Set([
 				"almacen",
 				"destino",
-				"llantas",
+				"cantidadAuto",
+				"cantidadCamion",
+				"otras",
 				"economico",
 				"ordenCarga",
 				"empezar",
@@ -2012,11 +2018,7 @@
 					const parts = raw
 						.split(" · ")
 						.map((part) => part.trim())
-						.filter((part) => part !== "")
-						.map((part) => {
-							if (columnKey !== "almacen") return part;
-							return part.replace(/\s+/g, " · ");
-						});
+						.filter((part) => part !== "");
 					if (parts.length === 0) {
 						return renderInput("", listId);
 					}
@@ -2104,7 +2106,7 @@
 				const mergeRowsForDate = (dateRows, fallbackDate) => {
 					const grouped = new Map();
 					dateRows.forEach((row) => {
-						const key = [row.destino, row.ubicacion, row.coordenadas]
+						const key = [row.destino, row.ubicacion, row.coordenadas, row.almacen]
 							.map((value) => (value || "").trim().toLowerCase())
 							.join("||");
 						if (!grouped.has(key)) {
@@ -2142,19 +2144,25 @@
 						if (!list.includes(clean)) list.push(clean);
 					};
 
-					const formatAlmacenLabel = (value) => {
+					const getAlmacenValues = (value) => {
 						const clean = (value || "").trim();
-						if (!clean) return "";
+						if (!clean) return [];
 						const digits = clean.match(/\d+/g);
-						if (!digits || digits.length === 0) return "";
-						return digits.join("");
+						if (digits && digits.length > 0) return digits;
+						return [clean];
 					};
 
 					Array.from(grouped.values()).forEach((row) => {
 					const rowEconomicos = uniqueLine(row.unidades.map((u) => u.economico));
 					const rowUnidades = uniqueLine(row.unidades.map((u) => u.unidad));
 					const rowOperadores = uniqueLine(row.unidades.map((u) => u.operador));
-					const baseKey = [row.fecha, row.destino, row.ubicacion, row.coordenadas]
+					const baseKey = [
+						row.fecha,
+						row.destino,
+						row.ubicacion,
+						row.coordenadas,
+						row.almacen,
+					]
 						.map((value) => (value || "").trim().toLowerCase())
 						.join("||");
 
@@ -2184,7 +2192,9 @@
 						}
 						const entry = mergeByUnidad.get(key);
 						if (!entry.fecha && row.fecha) entry.fecha = row.fecha;
-						addUnique(entry.almacenes, formatAlmacenLabel(row.almacen));
+						getAlmacenValues(row.almacen).forEach((value) =>
+							addUnique(entry.almacenes, value)
+						);
 						addUnique(entry.destinos, row.destino);
 						addUnique(entry.ubicaciones, row.ubicacion);
 						addUnique(entry.coordenadas, row.coordenadas);
@@ -2230,7 +2240,9 @@
 
 					const entry = mergeByUnidad.get(key);
 					if (!entry.fecha && row.fecha) entry.fecha = row.fecha;
-					addUnique(entry.almacenes, formatAlmacenLabel(row.almacen));
+					getAlmacenValues(row.almacen).forEach((value) =>
+						addUnique(entry.almacenes, value)
+					);
 					addUnique(entry.destinos, row.destino);
 					addUnique(entry.ubicaciones, row.ubicacion);
 					addUnique(entry.coordenadas, row.coordenadas);

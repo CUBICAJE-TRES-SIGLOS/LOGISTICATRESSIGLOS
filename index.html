@@ -783,6 +783,27 @@
 				width: 100%;
 			}
 
+			.logistica-comment-row td {
+				padding: 10px 12px;
+				background: #f8fafc;
+				border-top: 2px dashed var(--border);
+				border-bottom: 1px solid var(--border);
+			}
+
+			.logistica-comment-label {
+				font-size: 12px;
+				font-weight: 700;
+				color: var(--muted);
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				margin-bottom: 6px;
+			}
+
+			.logistica-comment-row textarea {
+				min-height: 40px;
+				resize: vertical;
+			}
+
 			@media print {
 				@page {
 					size: A4 portrait;
@@ -977,6 +998,10 @@
 				.logistica-table .stacked-field {
 					display: block;
 					padding: 0 2px;
+				}
+
+				.logistica-comment-label {
+					display: none;
 				}
 
 				.logistica-table .col-almacen .stacked-field {
@@ -1239,20 +1264,20 @@
 			]);
 			const logisticaColumnKeys = [
 				"fecha",
-				"almacen",
 				"destino",
-				"ubicacion",
-				"coordenadas",
+				"ordenCarga",
+				"almacen",
 				"cantidadAuto",
 				"cantidadCamion",
 				"otras",
-				"llantas",
 				"economico",
+				"empezar",
+				"ubicacion",
+				"coordenadas",
+				"llantas",
 				"unidad",
 				"operador",
 				"acompanante",
-				"ordenCarga",
-				"empezar",
 				"cartaPorte",
 				"factura",
 				"traspaso",
@@ -1380,6 +1405,14 @@
 					(key) => String(row?.[key] || "").trim() !== ""
 				);
 
+			const getLogisticaGroupComment = (rows) => {
+				if (!Array.isArray(rows)) return "";
+				const match = rows.find(
+					(row) => String(row?.comentariosGrupo || "").trim() !== ""
+				);
+				return match ? String(match.comentariosGrupo || "") : "";
+			};
+
 			const loadLocalData = () => {
 				const saved = localStorage.getItem(STORAGE_KEY);
 				if (!saved) {
@@ -1432,7 +1465,7 @@
 			};
 
 			const mapSheetRowToData = (row) => ({
-			fecha: pickValue(row, ["Fecha"]).replace(/^'/, ""), // Remover comilla prefijo
+				fecha: pickValue(row, ["Fecha"]).replace(/^'/, ""), // Remover comilla prefijo
 				almacen: pickValue(row, ["Almacén", "Almacen"]),
 				destino: pickValue(row, ["Destino"]),
 				ubicacion: pickValue(row, ["Ubicación", "Ubicacion"]),
@@ -1450,10 +1483,11 @@
 				cartaPorte: pickValue(row, ["carta porte", "Carta porte", "Carta Porte"]),
 				factura: pickValue(row, ["factura", "Factura"]),
 				traspaso: pickValue(row, ["traspaso", "Traspaso"]),
+				comentariosGrupo: pickValue(row, ["Comentarios", "Comentario", "Comentarios grupo"]),
 			});
 
 			const mapDataToSheetRow = (row) => ({
-			"Fecha": row.fecha ? `'${row.fecha}` : "", // Prefijo ' fuerza formato texto en SheetDB
+				"Fecha": row.fecha ? `'${row.fecha}` : "", // Prefijo ' fuerza formato texto en SheetDB
 				"Almacén": row.almacen || "",
 				"Destino": row.destino || "",
 				"Ubicación": row.ubicacion || "",
@@ -1471,7 +1505,22 @@
 				"carta porte": row.cartaPorte || "",
 				"factura": row.factura || "",
 				"traspaso": row.traspaso || "",
+				"Comentarios": row.comentariosGrupo || "",
 			});
+
+			const logisticaGroupNotes = new Map();
+
+			const getLogisticaGroupNotesFromDom = () => {
+				const map = new Map();
+				if (!logisticaLists) return map;
+				logisticaLists
+					.querySelectorAll("textarea[data-group-comment='true']")
+					.forEach((textarea) => {
+						const key = textarea.dataset.fechaKey || "";
+						map.set(key, textarea.value || "");
+					});
+				return map;
+			};
 
 			const mapDataToSheetRowBorrador = (row) => ({
 				"Almacén": row.almacen || "",
@@ -1984,7 +2033,9 @@
 
 			const getLogisticaRowsFromTable = () =>
 				getLogisticaBodies().flatMap((body) =>
-					Array.from(body.querySelectorAll("tr")).map((row) => {
+					Array.from(body.querySelectorAll("tr"))
+						.filter((row) => !row.classList.contains("logistica-comment-row"))
+						.map((row) => {
 						const data = {};
 						logisticaColumnKeys.forEach((key, index) => {
 							const cell = row.children[index];
@@ -2008,8 +2059,8 @@
 								.filter((value) => value !== "")
 								.join(" · ");
 						});
-						return data;
-					})
+							return data;
+						})
 				);
 
 // Función para detectar si dos objetos de fila son iguales
@@ -2020,6 +2071,9 @@
 				const val2 = (row2[key] || "").trim();
 				if (val1 !== val2) return false;
 			}
+				const comment1 = String(row1.comentariosGrupo || "").trim();
+				const comment2 = String(row2.comentariosGrupo || "").trim();
+				if (comment1 !== comment2) return false;
 			return true;
 		};
 
@@ -2106,10 +2160,15 @@
 			}
 
 			try {
+					const groupNotes = getLogisticaGroupNotesFromDom();
 				// Formatear fechas como texto (prefijo con comilla para que NOT sean números)
 				const rowsWithFormattedDates = currentRows.map((row) => ({
 					...row,
-					fecha: row.fecha ? `${row.fecha}` : "",
+						fecha: row.fecha ? `${row.fecha}` : "",
+						comentariosGrupo:
+							groupNotes.get(normalizeSearchValue(row.fecha || "")) ||
+							row.comentariosGrupo ||
+							"",
 				}));
 
 				// Para minimizar reescrituras, comparamos con datos originales
@@ -2529,6 +2588,32 @@
 						.replace(/</g, "&lt;")
 						.replace(/>/g, "&gt;");
 
+				const getGroupNoteForDate = (dateValue, dateRows) => {
+					const dateKey = normalizeSearchValue(dateValue || "");
+					if (logisticaGroupNotes.has(dateKey)) {
+						return logisticaGroupNotes.get(dateKey) || "";
+					}
+					const initial = getLogisticaGroupComment(dateRows);
+					logisticaGroupNotes.set(dateKey, initial);
+					return initial;
+				};
+
+				const renderCommentRow = (dateValue, dateRows) => {
+					const dateKey = normalizeSearchValue(dateValue || "");
+					const value = getGroupNoteForDate(dateValue, dateRows);
+					const colSpan = logisticaColumnKeys.length + 1;
+					return `
+						<tr class="logistica-comment-row">
+							<td colspan="${colSpan}">
+								<div class="logistica-comment-label print-hide">Comentarios</div>
+								<textarea data-group-comment="true" data-fecha-key="${escapeAttr(
+									dateKey
+								)}" placeholder="Comentarios...">${escapeText(value)}</textarea>
+							</td>
+						</tr>
+					`;
+				};
+
 				const buildDestinoSummary = (parts) => {
 					if (!parts || parts.length === 0) return "";
 					const first = parts[0];
@@ -2611,20 +2696,20 @@
 					<thead>
 						<tr>
 							<th data-column="fecha" data-secondary="true" class="${headerClass("fecha", "col-fecha")}" title="Ocultar columna">Fecha</th>
-							<th data-column="almacen" data-secondary="true" class="${headerClass("almacen", "col-almacen")}" title="Ocultar columna">Almacén</th>
 							<th data-column="destino" class="${headerClass("destino", "col-destino")}" title="Ocultar columna">Destino</th>
-							<th data-column="ubicacion" data-secondary="true" data-hide="true" class="${headerClass("ubicacion", "col-ubicacion")}" title="Ocultar columna">Ubicación</th>
-							<th data-column="coordenadas" data-secondary="true" data-hide="true" class="${headerClass("coordenadas", "col-coordenadas")}" title="Ocultar columna">Coordenadas</th>
+							<th data-column="ordenCarga" data-extra="true" class="${headerClass("ordenCarga", "col-ordenCarga")}" title="Ocultar columna">Orden de carga</th>
+							<th data-column="almacen" data-secondary="true" class="${headerClass("almacen", "col-almacen")}" title="Ocultar columna">Almacén</th>
 							<th data-column="cantidadAuto" data-extra="true" class="${headerClass("cantidadAuto", "col-cantidadAuto")}" title="Ocultar columna">Cant. Auto</th>
 							<th data-column="cantidadCamion" data-extra="true" class="${headerClass("cantidadCamion", "col-cantidadCamion")}" title="Ocultar columna">Cant. Camión</th>
 							<th data-column="otras" data-extra="true" class="${headerClass("otras", "col-otras")}" title="Ocultar columna">Otras</th>
-							<th data-column="llantas" class="${headerClass("llantas", "col-llantas")}" title="Ocultar columna">Llantas</th>
 							<th data-column="economico" class="${headerClass("economico", "col-economico")}" title="Ocultar columna">Económico</th>
+							<th data-column="empezar" data-extra="true" class="${headerClass("empezar", "col-empezar")}" title="Ocultar columna">Empezar a cargar</th>
+							<th data-column="ubicacion" data-secondary="true" data-hide="true" class="${headerClass("ubicacion", "col-ubicacion")}" title="Ocultar columna">Ubicación</th>
+							<th data-column="coordenadas" data-secondary="true" data-hide="true" class="${headerClass("coordenadas", "col-coordenadas")}" title="Ocultar columna">Coordenadas</th>
+							<th data-column="llantas" class="${headerClass("llantas", "col-llantas")}" title="Ocultar columna">Llantas</th>
 							<th data-column="unidad" data-hide="true" class="${headerClass("unidad", "col-unidad")}" title="Ocultar columna">Unidad</th>
 							<th data-column="operador" data-secondary="true" data-hide="true" class="${headerClass("operador", "col-operador")}" title="Ocultar columna">Operador</th>
 							<th data-column="acompanante" data-extra="true" data-hide="true" class="${headerClass("acompanante", "col-acompanante")}" title="Ocultar columna">Acompañante</th>
-							<th data-column="ordenCarga" data-extra="true" class="${headerClass("ordenCarga", "col-ordenCarga")}" title="Ocultar columna">Orden de carga</th>
-							<th data-column="empezar" data-extra="true" class="${headerClass("empezar", "col-empezar")}" title="Ocultar columna">Empezar a cargar</th>
 							<th data-column="cartaPorte" data-extra="true" class="${headerClass("cartaPorte", "col-cartaPorte")}" title="Ocultar columna">Carta porte</th>
 							<th data-column="factura" data-extra="true" class="${headerClass("factura", "col-factura")}" title="Ocultar columna">Factura</th>
 							<th data-column="traspaso" data-extra="true" class="${headerClass("traspaso", "col-traspaso")}" title="Ocultar columna">Traspaso</th>
@@ -2809,20 +2894,20 @@
 										: "";
 							const cells = [
 								{ value: row.fecha || "" },
-								{ value: joinInline(row.almacenes) },
 								{ value: joinInline(row.destinos) },
-								{ value: joinInline(row.ubicaciones) },
-								{ value: joinInline(row.coordenadas) },
+								{ value: joinInline(row.ordenCarga) },
+								{ value: joinInline(row.almacenes) },
 								{ value: joinInline(row.cantidadAuto) },
 								{ value: joinInline(row.cantidadCamion) },
 								{ value: joinInline(row.otras) },
-								{ value: llantasValue },
 								{ value: joinInline(row.economicos), list: "economicoOpciones" },
+								{ value: joinInline(row.empezar) },
+								{ value: joinInline(row.ubicaciones) },
+								{ value: joinInline(row.coordenadas) },
+								{ value: llantasValue },
 								{ value: joinInline(row.unidades), list: "unidadOpciones" },
 								{ value: joinInline(row.operadores), list: "operadorOpciones" },
 								{ value: joinInline(row.acompanantes) },
-								{ value: joinInline(row.ordenCarga) },
-								{ value: joinInline(row.empezar) },
 								{ value: joinInline(row.cartaPorte) },
 								{ value: joinInline(row.factura) },
 								{ value: joinInline(row.traspaso) },
@@ -2839,7 +2924,7 @@
 						{ length: logisticaColumnKeys.length },
 						() => ({ value: "" })
 					);
-					const emptyBody = `<tbody><tr>${renderCells(emptyCells)}${renderActionCell()}</tr></tbody>`;
+					const emptyBody = `<tbody><tr>${renderCells(emptyCells)}${renderActionCell()}</tr>${renderCommentRow(dateLabel, [])}</tbody>`;
 					logisticaLists.innerHTML = `
 						<details class="accordion-item">
 							<summary><div class="accordion-summary">Logística</div></summary>
@@ -2860,6 +2945,7 @@
 				const detailsBlocks = Array.from(groupedByDate.entries())
 					.map(([fecha, dateRows]) => {
 						const bodyRows = mergeRowsForDate(dateRows, fecha || numericDate);
+						const commentRow = renderCommentRow(fecha || numericDate, dateRows);
 						return `
 							<details class="accordion-item" data-fecha="${escapeAttr(fecha)}" data-fecha-label="${escapeAttr(getDateLabel(fecha))}">
 								<summary>
@@ -2868,7 +2954,7 @@
 								<div class="accordion-content">
 									<button type="button" class="conboy-fab" data-conboy-open="true" data-conboy-fecha="${escapeAttr(fecha)}" data-conboy-fecha-label="${escapeAttr(getDateLabel(fecha))}">CONBOY</button>
 									<div class="table-wrap">
-										<table class="logistica-table">${renderTableHeader()}<tbody>${bodyRows}</tbody></table>
+										<table class="logistica-table">${renderTableHeader()}<tbody>${bodyRows}${commentRow}</tbody></table>
 									</div>
 								</div>
 							</details>
@@ -3326,6 +3412,13 @@
 				if (target instanceof HTMLTextAreaElement) {
 					target.style.height = "auto";
 					target.style.height = `${target.scrollHeight}px`;
+				}
+				if (
+					target instanceof HTMLTextAreaElement &&
+					target.matches("[data-group-comment='true']")
+				) {
+					const key = target.dataset.fechaKey || "";
+					logisticaGroupNotes.set(key, target.value || "");
 				}
 			});
 

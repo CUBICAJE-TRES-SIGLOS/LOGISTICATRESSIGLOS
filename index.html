@@ -374,6 +374,273 @@
 				margin-top: 10px;
 				display: grid;
 				gap: 6px;
+				position: relative;
+				padding-top: 46px;
+				overflow: visible;
+			}
+
+			.conboy-fab {
+				position: absolute;
+				right: -6px;
+				top: 8px;
+				border: none;
+				border-radius: 12px 0 0 12px;
+				padding: 8px 14px;
+				font-size: 12px;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+				color: #0c4a6e;
+				box-shadow: 0 10px 24px rgba(14, 116, 144, 0.25);
+				cursor: pointer;
+				transition: transform 0.15s ease, box-shadow 0.2s ease;
+			}
+
+			.conboy-fab:hover {
+				transform: translateX(-2px);
+				box-shadow: 0 14px 28px rgba(14, 116, 144, 0.3);
+			}
+
+			.conboy-modal {
+				position: fixed;
+				inset: 0;
+				background: rgba(15, 23, 42, 0.45);
+				display: none;
+				align-items: center;
+				justify-content: center;
+				padding: 24px;
+				z-index: 2000;
+			}
+
+			.conboy-modal.is-open {
+				display: flex !important;
+			}
+
+			.conboy-container {
+				width: min(960px, 92vw);
+				max-height: 90vh;
+				overflow: hidden;
+				background: #ffffff;
+				border-radius: 18px;
+				box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+				display: flex;
+				flex-direction: column;
+			}
+
+			.conboy-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 16px 20px;
+				border-bottom: 1px solid var(--border);
+			}
+
+			.conboy-header h3 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.conboy-date-label {
+				font-size: 12px;
+				font-weight: 600;
+				color: var(--muted);
+			}
+
+			.conboy-close {
+				border: none;
+				background: #f1f5f9;
+				color: #0f172a;
+				width: 34px;
+				height: 34px;
+				border-radius: 999px;
+				font-size: 16px;
+				cursor: pointer;
+			}
+
+			.conboy-content {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+				gap: 16px;
+				padding: 18px 20px 0;
+				overflow: auto;
+			}
+
+			.conboy-section {
+				background: #f8fafc;
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				padding: 12px 14px;
+				min-height: 220px;
+			}
+
+			.conboy-section h4 {
+				font-size: 13px;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				color: var(--muted);
+				margin-bottom: 10px;
+			}
+
+			.conboy-units-list,
+			.conboy-groups-container {
+				min-height: 160px;
+				border: 1px dashed var(--border);
+				border-radius: 12px;
+				padding: 10px;
+				background: #ffffff;
+				color: var(--muted);
+				font-size: 13px;
+			}
+
+			.conboy-unit {
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 4px;
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 8px 10px;
+				background: #f8fafc;
+				font-size: 13px;
+				color: #0f172a;
+				cursor: pointer;
+				margin-bottom: 8px;
+			}
+
+			.conboy-unit-meta {
+				font-size: 11px;
+				color: var(--muted);
+			}
+
+			.conboy-group {
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 10px;
+				margin-bottom: 10px;
+				background: #f1f5f9;
+			}
+
+			.conboy-group-note {
+				width: 100%;
+				min-height: 60px;
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 8px 10px;
+				font-size: 12px;
+				background: #ffffff;
+				color: var(--text);
+				resize: vertical;
+				margin-top: 8px;
+			}
+
+			.conboy-group.active {
+				border-color: #0ea5e9;
+				box-shadow: 0 8px 18px rgba(14, 165, 233, 0.2);
+			}
+
+			.conboy-group-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 8px;
+				font-weight: 700;
+				font-size: 13px;
+				margin-bottom: 8px;
+			}
+
+			.conboy-chip {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				background: #ffffff;
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				padding: 4px 10px;
+				font-size: 12px;
+				margin: 0 6px 6px 0;
+			}
+
+			.conboy-chip button {
+				border: none;
+				background: transparent;
+				color: #dc2626;
+				font-weight: 700;
+				cursor: pointer;
+			}
+
+			.conboy-footer {
+				display: flex;
+				justify-content: flex-end;
+				gap: 12px;
+				padding: 16px 20px 20px;
+			}
+
+			.conboy-print-summary {
+				display: none;
+				margin-top: 8px;
+				border-top: 2px solid var(--border);
+				padding-top: 6px;
+			}
+
+			.conboy-print-heading {
+				font-size: 14px;
+				font-weight: 800;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				margin-bottom: 4px;
+			}
+
+			.conboy-print-date {
+				margin-bottom: 4px;
+			}
+
+			.conboy-print-date-title {
+				font-size: 12px;
+				font-weight: 700;
+				color: var(--muted);
+				margin-bottom: 6px;
+			}
+
+			.conboy-print-group {
+				display: grid;
+				grid-template-columns: 1fr 2fr;
+				gap: 4px;
+				padding: 3px 0;
+				border-bottom: 1px dashed var(--border);
+			}
+
+			.conboy-print-title {
+				font-weight: 700;
+				font-size: 12px;
+			}
+
+			.conboy-print-economicos {
+				font-size: 12px;
+				line-height: 1.1;
+			}
+
+			.conboy-print-note {
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 1px;
+				line-height: 1.1;
+			}
+
+			@media (max-width: 900px) {
+				.accordion-content {
+					padding-top: 56px;
+				}
+				.conboy-fab {
+					right: 12px;
+					border-radius: 999px;
+				}
 			}
 
 			.accordion-empty {
@@ -550,6 +817,11 @@
 					display: block !important;
 				}
 
+				.conboy-modal,
+				.conboy-fab {
+					display: none !important;
+				}
+
 				#logisticaAccordion {
 					display: block !important;
 				}
@@ -655,6 +927,11 @@
 					display: block;
 					white-space: normal;
 					word-break: break-word;
+				}
+
+				.conboy-print-summary {
+					display: block;
+					page-break-inside: avoid;
 				}
 
 				.logistica-table .print-hide {
@@ -797,6 +1074,7 @@
 			</div>
 			<p class="footer-note" id="pdfColumnsNote"></p>
 			<div id="logisticaLists"></div>
+			<div id="conboyPrintSummary" class="conboy-print-summary print-only" aria-hidden="true"></div>
 		</section>
 
 		<datalist id="almacenOpciones">
@@ -829,6 +1107,34 @@
 			<option value="Macro"></option>
 			<option value="Central"></option>
 		</datalist>
+
+		<!-- MODAL CONBOY - Acomodador de Unidades -->
+		<div id="conboyModal" class="conboy-modal" style="display: none;" aria-hidden="true">
+			<div class="conboy-container">
+				<div class="conboy-header">
+					<h3>
+						<span>🚚 CONBOY - Acomodador de Unidades</span>
+						<span id="conboyDateLabel" class="conboy-date-label"></span>
+					</h3>
+					<button type="button" class="conboy-close" id="conboyClose">✕</button>
+				</div>
+				<div class="conboy-content">
+					<div class="conboy-section">
+						<h4>Unidades Disponibles</h4>
+						<div id="conboyAvailableUnits" class="conboy-units-list"></div>
+					</div>
+					<div class="conboy-section">
+						<h4>Grupos Formados</h4>
+						<div id="conboyGroups" class="conboy-groups-container"></div>
+						<button type="button" class="secondary" id="conboyAddGroup">+ Crear Grupo</button>
+					</div>
+				</div>
+				<div class="conboy-footer">
+					<button type="button" class="danger" id="conboyClear">Limpiar</button>
+					<button type="button" class="primary" id="conboyApply">Aplicar Cambios</button>
+				</div>
+			</div>
+		</div>
 
 		<script>
 			const tableBody = document.getElementById("tableBody");
@@ -874,6 +1180,15 @@
 			const borradorColumnToggles = document.getElementById(
 				"borradorColumnToggles"
 			);
+			const conboyModal = document.getElementById("conboyModal");
+			const conboyClose = document.getElementById("conboyClose");
+			const conboyDateLabel = document.getElementById("conboyDateLabel");
+			const conboyAvailableUnits = document.getElementById("conboyAvailableUnits");
+			const conboyGroups = document.getElementById("conboyGroups");
+			const conboyAddGroup = document.getElementById("conboyAddGroup");
+			const conboyClear = document.getElementById("conboyClear");
+			const conboyApply = document.getElementById("conboyApply");
+			const conboyPrintSummary = document.getElementById("conboyPrintSummary");
 
 			const STORAGE_KEY = "cubicaje-hoja-libre";
 			const STORAGE_LOGISTICA = "cubicaje-logistica-dia";
@@ -1117,7 +1432,7 @@
 			};
 
 			const mapSheetRowToData = (row) => ({
-				fecha: pickValue(row, ["Fecha"]),
+			fecha: pickValue(row, ["Fecha"]).replace(/^'/, ""), // Remover comilla prefijo
 				almacen: pickValue(row, ["Almacén", "Almacen"]),
 				destino: pickValue(row, ["Destino"]),
 				ubicacion: pickValue(row, ["Ubicación", "Ubicacion"]),
@@ -1138,7 +1453,7 @@
 			});
 
 			const mapDataToSheetRow = (row) => ({
-				"Fecha": row.fecha || "",
+			"Fecha": row.fecha ? `'${row.fecha}` : "", // Prefijo ' fuerza formato texto en SheetDB
 				"Almacén": row.almacen || "",
 				"Destino": row.destino || "",
 				"Ubicación": row.ubicacion || "",
@@ -1697,26 +2012,168 @@
 					})
 				);
 
-			const saveLogisticaChanges = async () => {
-				const rows = getLogisticaRowsFromTable().filter((row) =>
-					hasLogisticaRowContent(row)
+// Función para detectar si dos objetos de fila son iguales
+		const areRowsEqual = (row1, row2) => {
+			if (!row1 || !row2) return row1 === row2;
+			for (const key of logisticaColumnKeys) {
+				const val1 = (row1[key] || "").trim();
+				const val2 = (row2[key] || "").trim();
+				if (val1 !== val2) return false;
+			}
+			return true;
+		};
+
+		// Función para encontrar cambios específicos entre dos conjuntos de filas
+		const findLogisticaChanges = (currentRows, originalRows) => {
+			const changes = {
+				updated: [],
+				added: [],
+				removed: [],
+			};
+
+			// Detectar filas actualizadas
+			currentRows.forEach((currentRow) => {
+				const originalRow = originalRows.find((orig) =>
+					areRowsEqual(orig, currentRow)
 				);
-				if (rows.length === 0) {
-					alert("No hay datos para guardar.");
+				if (!originalRow) {
+					// No es exactamente igual, podría ser actualizada
+					const similar = originalRows.find(
+						(orig) =>
+							orig.fecha === currentRow.fecha &&
+							orig.economico === currentRow.economico &&
+							orig.destino === currentRow.destino
+					);
+					if (similar) {
+						changes.updated.push(currentRow);
+					} else {
+						changes.added.push(currentRow);
+					}
+				}
+			});
+
+			// Detectar filas eliminadas
+			originalRows.forEach((originalRow) => {
+				const found = currentRows.find((curr) => areRowsEqual(curr, originalRow));
+				if (!found) {
+					changes.removed.push(originalRow);
+				}
+			});
+
+			return changes;
+		};
+
+		// Función para actualizar una fila específica en la hoja (PUT)
+		const updateRowInSheet = async (sheetName, searchCriteria, newData) => {
+			const baseUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}`;
+			
+			// Mapear los datos nuevos
+			const mappedData = mapDataToSheetRow(newData);
+			
+			try {
+				const response = await fetch(
+					`${baseUrl}?sheet=${encodeURIComponent(sheetName)}`,
+					{
+						method: "PATCH",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							data: newData ? [mappedData] : [],
+							search: searchCriteria,
+						}),
+					}
+				);
+				
+				if (!response.ok) {
+					const details = await response.text();
+					throw new Error(
+						`No se pudo actualizar fila en la hoja (${response.status}). ${details}`
+					);
+				}
+				return true;
+			} catch (error) {
+				console.warn("PATCH no soportado, intentando DELETE + INSERT", error);
+				return false;
+			}
+		};
+
+		const saveLogisticaChanges = async () => {
+			const currentRows = getLogisticaRowsFromTable().filter((row) =>
+				hasLogisticaRowContent(row)
+			);
+			if (currentRows.length === 0) {
+				alert("No hay datos para guardar.");
+				return false;
+			}
+
+			try {
+				// Formatear fechas como texto (prefijo con comilla para que NOT sean números)
+				const rowsWithFormattedDates = currentRows.map((row) => ({
+					...row,
+					fecha: row.fecha ? `${row.fecha}` : "",
+				}));
+
+				// Para minimizar reescrituras, comparamos con datos originales
+				const changes = findLogisticaChanges(
+					rowsWithFormattedDates,
+					logisticaRowsFromApi
+				);
+
+				// Si no hay cambios materiales, no hacer nada
+				if (
+					changes.updated.length === 0 &&
+					changes.added.length === 0 &&
+					changes.removed.length === 0
+				) {
+					alert("No hay cambios para guardar.");
 					return false;
 				}
-				try {
+
+				// Si hay cambios, reescrever solo lo necesario
+				// Intentar actualizar de form inteligente primero
+				let updateSuccess = false;
+
+				// Si solo hay cambios en una fila específica, intentar PUT directo
+				if (
+					changes.updated.length === 1 &&
+					changes.added.length === 0 &&
+					changes.removed.length === 0
+				) {
+					const updatedRow = changes.updated[0];
+					const originalRow = logisticaRowsFromApi.find(
+						(orig) =>
+							orig.fecha === updatedRow.fecha &&
+							orig.economico === updatedRow.economico &&
+							orig.destino === updatedRow.destino
+					);
+
+					if (originalRow) {
+						updateSuccess = await updateRowInSheet(
+							SHEETDB_TAB_LOGISTICA,
+							{
+								Fecha: originalRow.fecha,
+								Económico: originalRow.economico,
+								Destino: originalRow.destino,
+							},
+							updatedRow
+						);
+					}
+				}
+
+				// Si el UPDATE específico no funcionó, usar el método de reescritura
+				if (!updateSuccess) {
 					try {
-						await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows);
+						await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rowsWithFormattedDates);
 					} catch (error) {
 						console.warn("Fallo limpieza, se intenta agregar", error);
-						await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows, null, {
+						await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rowsWithFormattedDates, null, {
 							clearFirst: false,
 						});
 					}
-					logisticaRowsFromApi = rows;
-					localStorage.setItem(STORAGE_LOGISTICA, JSON.stringify(rows));
-					renderLogistica(rows);
+				}
+
+				logisticaRowsFromApi = rowsWithFormattedDates;
+				localStorage.setItem(STORAGE_LOGISTICA, JSON.stringify(rowsWithFormattedDates));
+				renderLogistica(rowsWithFormattedDates);
 					loadLogisticaData().catch((error) =>
 						console.error("Error al recargar logística", error)
 					);
@@ -1895,6 +2352,79 @@
 					.toLowerCase()
 					.replace(/\s+/g, "")
 					.replace(/[^0-9a-z/.-]/g, "");
+
+			const renderConboyPrintSummary = (rows) => {
+				if (!conboyPrintSummary) return;
+				const escapeText = (value) =>
+					String(value)
+						.replace(/&/g, "&amp;")
+						.replace(/</g, "&lt;")
+						.replace(/>/g, "&gt;");
+				const fallbackDate = new Date().toLocaleDateString("es-MX");
+				const visibleDates = Array.from(
+					logisticaLists?.querySelectorAll("details.accordion-item") || []
+				)
+					.filter((detail) => detail.style.display !== "none")
+					.map((detail) => String(detail.dataset.fecha || "").trim())
+					.filter(Boolean);
+				const sourceDates = visibleDates.length
+					? visibleDates
+					: (rows || []).map((row) => {
+							const rowDate = String(row.fecha || fallbackDate).trim();
+							return rowDate || fallbackDate;
+						});
+				const uniqueDates = Array.from(new Set(sourceDates));
+				const store = getConboyStore();
+				const blocks = uniqueDates
+					.map((dateValue) => {
+						const dateKey = normalizeSearchValue(dateValue);
+						const groups = Array.isArray(store[dateKey]) ? store[dateKey] : [];
+						if (groups.length === 0) return "";
+						const groupsHtml = groups
+							.map((group) => {
+								const economicos = Array.from(
+									new Set(
+										(group.units || [])
+											.map((unit) => String(unit.economico || "").trim())
+											.filter(Boolean)
+									)
+								);
+								const ecoText = economicos.length
+									? economicos.join(", ")
+									: "Sin economico";
+									const noteText = String(group.note || "").trim();
+									return `
+										<div class="conboy-print-group">
+											<div class="conboy-print-title">${escapeText(
+												group.name || "Grupo"
+											)}</div>
+											<div class="conboy-print-economicos">${escapeText(
+												ecoText
+											)}</div>
+											${noteText ? `
+												<div class="conboy-print-note">${escapeText(noteText)}</div>` : ""}
+										</div>
+									`;
+							})
+							.join("");
+						return `
+							<div class="conboy-print-date">
+								${groupsHtml}
+							</div>
+						`;
+					})
+					.join("");
+				if (!blocks.trim()) {
+					conboyPrintSummary.innerHTML = "";
+					conboyPrintSummary.setAttribute("aria-hidden", "true");
+					return;
+				}
+				conboyPrintSummary.innerHTML = `
+					<div class="conboy-print-heading">CONBOY</div>
+					${blocks}
+				`;
+				conboyPrintSummary.setAttribute("aria-hidden", "false");
+			};
 
 			const applyLogisticaSearch = (query) => {
 				if (!logisticaLists) return;
@@ -2314,6 +2844,7 @@
 						<details class="accordion-item">
 							<summary><div class="accordion-summary">Logística</div></summary>
 							<div class="accordion-content">
+								<button type="button" class="conboy-fab" data-conboy-open="true" data-conboy-fecha="${escapeAttr(dateLabel)}" data-conboy-fecha-label="${escapeAttr(dateLabel)}">CONBOY</button>
 								<div class="table-wrap">
 									<table class="logistica-table">${renderTableHeader()}${emptyBody}</table>
 								</div>
@@ -2335,6 +2866,7 @@
 									<div class="accordion-summary">Logística · ${getDateLabel(fecha)}</div>
 								</summary>
 								<div class="accordion-content">
+									<button type="button" class="conboy-fab" data-conboy-open="true" data-conboy-fecha="${escapeAttr(fecha)}" data-conboy-fecha-label="${escapeAttr(getDateLabel(fecha))}">CONBOY</button>
 									<div class="table-wrap">
 										<table class="logistica-table">${renderTableHeader()}<tbody>${bodyRows}</tbody></table>
 									</div>
@@ -2349,6 +2881,7 @@
 				updateLogisticaColumnSummary();
 				autoResizeLogisticaTextareas();
 				applyLogisticaSearch(logisticaSearchInput?.value || "");
+				renderConboyPrintSummary(rows);
 			};
 
 			const autoResizeLogisticaTextareas = () => {
@@ -2453,9 +2986,311 @@
 				restoreDestinoAfterPrint();
 			});
 
+			const STORAGE_CONBOY = "cubicaje-conboy-grupos";
+
+			const formatUnitLabel = (unit) => {
+				const parts = [];
+				if (unit.economico) parts.push(`ECO ${unit.economico}`);
+				if (unit.unidad) parts.push(`UNI ${unit.unidad}`);
+				if (unit.operador) parts.push(`OP ${unit.operador}`);
+				return parts.join(" · ") || "Unidad";
+			};
+
+			const normalizeUnitKey = (unit) =>
+				[unit.economico, unit.unidad, unit.operador]
+					.map((value) => normalizeSearchValue(value || ""))
+					.join("||");
+
+			const buildConboyUnits = (rows) => {
+				const map = new Map();
+				rows.forEach((row) => {
+					const unit = {
+						economico: String(row.economico || "").trim(),
+						unidad: String(row.unidad || "").trim(),
+						operador: String(row.operador || "").trim(),
+						ubicacion: String(row.ubicacion || "").trim(),
+					};
+					if (!unit.economico && !unit.unidad && !unit.operador) return;
+					const key = normalizeUnitKey(unit);
+					if (!map.has(key)) map.set(key, unit);
+				});
+				return Array.from(map.values());
+			};
+
+			const getConboyRowsForDate = (rawDate, labelDate) => {
+				const rows = getLogisticaRowsForView();
+				const normalized = normalizeSearchValue(rawDate || labelDate || "");
+				if (!normalized) return rows;
+				const fallbackDate = new Date().toLocaleDateString("es-MX");
+				return rows.filter((row) => {
+					const rowDate = String(row.fecha || fallbackDate).trim() || fallbackDate;
+					const rowRaw = normalizeSearchValue(rowDate);
+					const rowLabel = normalizeSearchValue(getDateLabel(rowDate));
+					return rowRaw === normalized || rowLabel === normalized;
+				});
+			};
+
+			const getConboyStore = () => {
+				try {
+					const raw = localStorage.getItem(STORAGE_CONBOY);
+					const parsed = raw ? JSON.parse(raw) : {};
+					return parsed && typeof parsed === "object" ? parsed : {};
+				} catch (error) {
+					console.warn("No se pudo leer CONBOY", error);
+					return {};
+				}
+			};
+
+			const saveConboyStore = (store) => {
+				localStorage.setItem(STORAGE_CONBOY, JSON.stringify(store));
+			};
+
+			const conboyState = {
+				dateKey: "",
+				dateLabel: "",
+				units: [],
+				groups: [],
+				activeGroupId: null,
+			};
+
+			const persistConboyState = () => {
+				if (!conboyState.dateKey) return;
+				const store = getConboyStore();
+				store[conboyState.dateKey] = conboyState.groups;
+				saveConboyStore(store);
+			};
+
+			const escapeConboyText = (value) =>
+				String(value)
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;");
+
+			const renderConboy = () => {
+				if (!conboyAvailableUnits || !conboyGroups) return;
+				if (conboyState.units.length === 0) {
+					conboyAvailableUnits.innerHTML = "No hay unidades para esta fecha.";
+				} else {
+					conboyAvailableUnits.innerHTML = conboyState.units
+						.map((unit, index) => {
+							const ubicacionLabel = unit.ubicacion || "Sin ubicacion";
+							const meta = [
+								unit.economico ? `ECO ${unit.economico}` : "",
+								unit.operador ? `OP ${unit.operador}` : "",
+							]
+								.filter(Boolean)
+								.join(" · ");
+							return `
+								<button type="button" class="conboy-unit" data-conboy-unit-index="${index}">
+									<span>${ubicacionLabel}</span>
+									<span class="conboy-unit-meta">${meta}</span>
+								</button>
+							`;
+						})
+						.join("");
+				}
+
+				if (conboyState.groups.length === 0) {
+					conboyGroups.innerHTML = "Crea un grupo para empezar.";
+					return;
+				}
+
+				conboyGroups.innerHTML = conboyState.groups
+					.map((group) => {
+						const isActive = group.id === conboyState.activeGroupId;
+						const chips = (group.units || [])
+							.map((unit, index) => {
+								const label = formatUnitLabel(unit);
+								return `
+									<span class="conboy-chip">
+										${label}
+										<button type="button" data-conboy-remove="true" data-group-id="${group.id}" data-unit-index="${index}">x</button>
+									</span>
+								`;
+							})
+							.join("") || "Sin unidades";
+						return `
+							<div class="conboy-group${isActive ? " active" : ""}" data-group-id="${group.id}">
+								<div class="conboy-group-header">
+									<button type="button" class="secondary" data-conboy-group-rename="true" data-group-id="${group.id}">${group.name}</button>
+									<button type="button" class="secondary" data-conboy-group-select="true" data-group-id="${group.id}">Usar</button>
+									<button type="button" class="danger" data-conboy-group-remove="true" data-group-id="${group.id}">Eliminar</button>
+								</div>
+								<div>${chips}</div>
+								<textarea class="conboy-group-note" data-conboy-group-note="true" data-group-id="${group.id}" placeholder="Comentario del grupo...">${escapeConboyText(group.note || "")}</textarea>
+							</div>
+						`;
+					})
+					.join("");
+			};
+
+			const createConboyGroup = () => {
+				const nextId = Date.now();
+				const index = conboyState.groups.length + 1;
+				conboyState.groups.push({
+					id: nextId,
+					name: `Grupo ${index}`,
+					units: [],
+					note: "",
+				});
+				conboyState.activeGroupId = nextId;
+				persistConboyState();
+				renderConboy();
+			};
+
+			const addUnitToActiveGroup = (unit) => {
+				if (!unit) return;
+				if (!conboyState.activeGroupId) {
+					createConboyGroup();
+				}
+				const group = conboyState.groups.find(
+					(item) => item.id === conboyState.activeGroupId
+				);
+				if (!group) return;
+				const key = normalizeUnitKey(unit);
+				const exists = group.units.some(
+					(item) => normalizeUnitKey(item) === key
+				);
+				if (!exists) {
+					group.units.push(unit);
+					persistConboyState();
+					renderConboy();
+				}
+			};
+
+			const openConboyModal = (fechaRaw, fechaLabel) => {
+				if (!conboyModal) return;
+				conboyModal.classList.add("is-open");
+				conboyModal.setAttribute("aria-hidden", "false");
+				const label = String(fechaLabel || "").trim();
+				const raw = String(fechaRaw || "").trim();
+				conboyState.dateLabel = label || raw;
+				conboyState.dateKey = normalizeSearchValue(raw || label || "");
+				const rowsForDate = getConboyRowsForDate(raw, label);
+				conboyState.units = buildConboyUnits(rowsForDate);
+				const store = getConboyStore();
+				conboyState.groups = Array.isArray(store[conboyState.dateKey])
+					? store[conboyState.dateKey]
+					: [];
+				conboyState.activeGroupId = conboyState.groups[0]?.id || null;
+				if (conboyDateLabel) {
+					conboyDateLabel.textContent = conboyState.dateLabel
+						? `· ${conboyState.dateLabel}`
+						: "";
+				}
+				renderConboy();
+			};
+
+			const closeConboyModal = () => {
+				if (!conboyModal) return;
+				conboyModal.classList.remove("is-open");
+				conboyModal.setAttribute("aria-hidden", "true");
+			};
+
+			conboyClose?.addEventListener("click", closeConboyModal);
+			conboyModal?.addEventListener("click", (event) => {
+				if (event.target === conboyModal) {
+					closeConboyModal();
+				}
+			});
+
+			conboyAddGroup?.addEventListener("click", () => createConboyGroup());
+			conboyClear?.addEventListener("click", () => {
+				conboyState.groups = [];
+				conboyState.activeGroupId = null;
+				persistConboyState();
+				renderConboy();
+			});
+			conboyApply?.addEventListener("click", () => {
+				persistConboyState();
+				closeConboyModal();
+			});
+
+			conboyAvailableUnits?.addEventListener("click", (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+				const button = target.closest("[data-conboy-unit-index]");
+				if (!button) return;
+				const index = Number(button.dataset.conboyUnitIndex || "-1");
+				const unit = conboyState.units[index];
+				addUnitToActiveGroup(unit);
+			});
+
+			conboyGroups?.addEventListener("dblclick", (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+				const renameGroup = target.closest("[data-conboy-group-rename='true']");
+				if (renameGroup) {
+					const id = Number(renameGroup.dataset.groupId || "0");
+					const group = conboyState.groups.find((g) => g.id === id);
+					if (!group) return;
+					const response = window.prompt("Nombre del grupo:", group.name);
+					if (response === null) return;
+					const cleaned = String(response).trim();
+					if (!cleaned) return;
+					group.name = cleaned;
+					persistConboyState();
+					renderConboy();
+					return;
+				}
+			});
+
+			conboyGroups?.addEventListener("click", (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+				const select = target.closest("[data-conboy-group-select='true']");
+				if (select) {
+					const id = Number(select.dataset.groupId || "0");
+					if (id) conboyState.activeGroupId = id;
+					renderConboy();
+					return;
+				}
+				const removeGroup = target.closest("[data-conboy-group-remove='true']");
+				if (removeGroup) {
+					const id = Number(removeGroup.dataset.groupId || "0");
+					conboyState.groups = conboyState.groups.filter((g) => g.id !== id);
+					if (conboyState.activeGroupId === id) {
+						conboyState.activeGroupId = conboyState.groups[0]?.id || null;
+					}
+					persistConboyState();
+					renderConboy();
+					return;
+				}
+				const removeUnit = target.closest("[data-conboy-remove='true']");
+				if (removeUnit) {
+					const groupId = Number(removeUnit.dataset.groupId || "0");
+					const unitIndex = Number(removeUnit.dataset.unitIndex || "-1");
+					const group = conboyState.groups.find((g) => g.id === groupId);
+					if (group && unitIndex > -1) {
+						group.units.splice(unitIndex, 1);
+						persistConboyState();
+						renderConboy();
+					}
+				}
+			});
+
+			conboyGroups?.addEventListener("input", (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLTextAreaElement)) return;
+				if (!target.matches("[data-conboy-group-note='true']")) return;
+				const groupId = Number(target.dataset.groupId || "0");
+				const group = conboyState.groups.find((g) => g.id === groupId);
+				if (!group) return;
+				group.note = target.value;
+				persistConboyState();
+			});
+
 			logisticaLists?.addEventListener("click", async (event) => {
 				const target = event.target;
 				if (!(target instanceof HTMLElement)) return;
+				const conboyTrigger = target.closest("[data-conboy-open='true']");
+				if (conboyTrigger instanceof HTMLElement) {
+					openConboyModal(
+						conboyTrigger.dataset.conboyFecha || "",
+						conboyTrigger.dataset.conboyFechaLabel || ""
+					);
+					return;
+				}
 				const destinoToggle = target.closest("[data-destino-toggle='true']");
 				if (destinoToggle) {
 					const wrapper = destinoToggle.closest(".destino-compact");

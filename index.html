@@ -818,6 +818,41 @@
 				margin-bottom: 6px;
 			}
 
+			.logistica-comment-toggle {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 10px;
+				width: 100%;
+				border: 1px dashed var(--border);
+				background: #ffffff;
+				color: var(--text);
+				padding: 8px 10px;
+				border-radius: 10px;
+				font-size: 12px;
+				font-weight: 600;
+				cursor: pointer;
+				text-align: left;
+			}
+
+			.logistica-comment-toggle .comment-preview {
+				color: var(--muted);
+				font-weight: 500;
+				flex: 1;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.logistica-comment-body {
+				display: none;
+				margin-top: 8px;
+			}
+
+			.logistica-comment-row.is-open .logistica-comment-body {
+				display: block;
+			}
+
 			.logistica-comment-row textarea {
 				min-height: 40px;
 				resize: vertical;
@@ -881,6 +916,11 @@
 
 				.table-wrap {
 					overflow: visible;
+					padding-bottom: 0;
+				}
+
+				.accordion-content {
+					padding-top: 0;
 				}
 
 				.logistica-table {
@@ -1021,6 +1061,14 @@
 
 				.logistica-comment-label {
 					display: none;
+				}
+
+				.logistica-comment-toggle {
+					display: none;
+				}
+
+				.logistica-comment-body {
+					display: block !important;
 				}
 
 				.logistica-comment-row.is-empty {
@@ -2250,11 +2298,13 @@
 
 				logisticaRowsFromApi = rowsWithFormattedDates;
 				localStorage.setItem(STORAGE_LOGISTICA, JSON.stringify(rowsWithFormattedDates));
-				renderLogistica(rowsWithFormattedDates);
-					loadLogisticaData().catch((error) =>
-						console.error("Error al recargar logística", error)
-					);
-					return true;
+				try {
+					await loadLogisticaData();
+				} catch (error) {
+					console.error("Error al recargar logística", error);
+				}
+				renderLogistica(getLogisticaRowsForView());
+				return true;
 				} catch (error) {
 					console.error("No se pudo guardar cambios de logística", error);
 					alert(
@@ -2620,14 +2670,25 @@
 
 				const renderCommentRow = (value) => {
 					const colSpan = logisticaColumnKeys.length + 1;
-					const isEmpty = String(value || "").trim() === "";
+					const cleanValue = String(value || "").trim();
+					const isEmpty = cleanValue === "";
+					const preview = cleanValue
+						? cleanValue.length > 60
+							? `${cleanValue.slice(0, 60)}...`
+							: cleanValue
+						: "Agregar comentario";
 					return `
-						<tr class="logistica-comment-row${isEmpty ? " is-empty" : ""}">
+						<tr class="logistica-comment-row${isEmpty ? " is-empty" : ""}" data-comment-row="true">
 							<td colspan="${colSpan}">
-								<div class="logistica-comment-label print-hide">Comentarios</div>
-								<textarea data-row-comment="true" placeholder="Comentarios...">${escapeText(
-									value
-								)}</textarea>
+								<button type="button" class="logistica-comment-toggle print-hide" data-comment-toggle="true" aria-expanded="false">
+									<span>Comentarios</span>
+									<span class="comment-preview">${escapeText(preview)}</span>
+								</button>
+								<div class="logistica-comment-body">
+									<textarea data-row-comment="true" placeholder="Comentarios...">${escapeText(
+										value
+									)}</textarea>
+								</div>
 							</td>
 						</tr>
 					`;
@@ -2847,7 +2908,9 @@
 						addUnique(entry.factura, row.factura);
 						addUnique(entry.traspaso, row.traspaso);
 						addUnique(entry.empezar, row.empezar);
-						addUnique(entry.comentarios, row.comentariosGrupo);
+						(row.comentarios || []).forEach((comentario) =>
+							addUnique(entry.comentarios, comentario)
+						);
 						return;
 					}
 
@@ -2899,8 +2962,10 @@
 					addUnique(entry.cartaPorte, row.cartaPorte);
 					addUnique(entry.factura, row.factura);
 					addUnique(entry.traspaso, row.traspaso);
-					addUnique(entry.empezar, row.empezar);
-					addUnique(entry.comentarios, row.comentariosGrupo);
+						addUnique(entry.empezar, row.empezar);
+						(row.comentarios || []).forEach((comentario) =>
+							addUnique(entry.comentarios, comentario)
+						);
 					});
 
 					const sumList = (list) =>
@@ -3428,6 +3493,22 @@
 					if (details) details.setAttribute("aria-hidden", String(!isOpen));
 					return;
 				}
+				const commentToggle = target.closest("[data-comment-toggle='true']");
+				if (commentToggle) {
+					const row = commentToggle.closest("tr.logistica-comment-row");
+					if (!row) return;
+					const isOpen = row.classList.toggle("is-open");
+					commentToggle.setAttribute("aria-expanded", String(isOpen));
+					if (isOpen) {
+						const textarea = row.querySelector("textarea[data-row-comment='true']");
+						if (textarea) {
+							textarea.style.height = "auto";
+							textarea.style.height = `${textarea.scrollHeight}px`;
+							textarea.focus();
+						}
+					}
+					return;
+				}
 				const header = target.closest("th[data-column]");
 				if (header) {
 					const key = header.dataset.column;
@@ -3450,9 +3531,22 @@
 
 			logisticaLists?.addEventListener("input", (event) => {
 				const target = event.target;
-				if (target instanceof HTMLTextAreaElement) {
-					target.style.height = "auto";
-					target.style.height = `${target.scrollHeight}px`;
+				if (!(target instanceof HTMLTextAreaElement)) return;
+				target.style.height = "auto";
+				target.style.height = `${target.scrollHeight}px`;
+				if (target.matches("[data-row-comment='true']")) {
+					const row = target.closest("tr.logistica-comment-row");
+					if (!row) return;
+					const toggle = row.querySelector("[data-comment-toggle='true']");
+					const preview = row.querySelector(".comment-preview");
+					if (!toggle || !preview) return;
+					const cleanValue = String(target.value || "").trim();
+					const summary = cleanValue
+						? cleanValue.length > 60
+							? `${cleanValue.slice(0, 60)}...`
+							: cleanValue
+						: "Agregar comentario";
+					preview.textContent = summary;
 				}
 			});
 
@@ -3487,7 +3581,7 @@
 					console.error("No se pudo guardar logística", error);
 					alert(
 						`No se pudo guardar en la base. ${error?.message || "Intenta de nuevo."}`
-					);
+					); 
 					return;
 				}
 				localStorage.setItem(STORAGE_LOGISTICA, JSON.stringify(rows));

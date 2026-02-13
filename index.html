@@ -1289,11 +1289,13 @@
 
 			const STORAGE_KEY = "cubicaje-hoja-libre";
 			const STORAGE_LOGISTICA = "cubicaje-logistica-dia";
+			const STORAGE_CONBOY = "cubicaje-conboy-grupos";
 			const SHEETDB_ID = "mrrlieg6zoleg";
 			const SHEETDB_TAB = "logistica";
 			const SHEETDB_TAB_FLOTA = "flota";
 			const SHEETDB_TAB_BORRADOR = "borrador";
 			const SHEETDB_TAB_LOGISTICA = "hoja de logistica";
+			const SHEETDB_TAB_CONBOY = "CONBOY";
 
 			const columns = [
 				{ key: "destino", type: "text", list: "destinoOpciones" },
@@ -1616,6 +1618,141 @@
 				}
 			};
 
+			const extractEconomicoCode = (value) => {
+				const raw = String(value || "").trim();
+				if (!raw) return "";
+				const cleaned = raw
+					.toUpperCase()
+					.replace(/^ECO\s*/i, "")
+					.replace(/\s+/g, "")
+					.replace(/[^0-9A-Z-]/g, "");
+				return cleaned;
+			};
+
+			const mapConboyToSheetRow = (fecha, group) => {
+				const safeGroup = group || {};
+				const unitsSource = Array.isArray(safeGroup.units)
+					? safeGroup.units
+					: Array.isArray(safeGroup.unidades)
+					? safeGroup.unidades
+					: [];
+				const unidadesStr = unitsSource
+					.map((unit) => {
+						if (typeof unit === "string") return unit.trim();
+						return String(
+							unit?.economico ||
+								unit?.numeroEconomico ||
+								unit?.numEconomico ||
+								unit?.unidad ||
+								""
+						).trim();
+					})
+					.map((value) => extractEconomicoCode(value))
+					.filter(Boolean)
+					.join("-");
+				const groupName = String(
+					safeGroup.name || safeGroup.nombre || safeGroup.grupo || ""
+				).trim();
+				return {
+					Fecha: fecha ? `'${String(fecha).trim()}` : "",
+					Grupo: groupName || "Grupo",
+					Unidades: unidadesStr,
+					Comentario: String(safeGroup.note || "").trim(),
+				};
+			};
+
+			const mapSheetRowToConboy = (row) => {
+				const unidadesStr = String(row.Unidades || "").trim();
+				const units = unidadesStr
+					.split("; ")
+					.map((economico) => {
+						return {
+							economico: economico.trim(),
+							unidad: "",
+							operador: "",
+							ubicacion: "",
+						};
+					})
+					.filter((u) => u.economico);
+				return {
+					id: Date.now(),
+					name: String(row.Grupo || "Grupo").trim(),
+					units: units,
+					note: String(row.Comentario || "").trim(),
+				};
+			};
+
+			const loadConboyFromApi = async () => {
+				try {
+					const response = await fetch(
+						`https://sheetdb.io/api/v1/${SHEETDB_ID}?sheet=${encodeURIComponent(
+							SHEETDB_TAB_CONBOY
+						)}`
+					);
+					if (!response.ok) throw new Error("Respuesta inválida");
+					const data = await response.json();
+					if (!Array.isArray(data) || data.length === 0) return {};
+					const store = {};
+					data.forEach((row) => {
+						const fecha = String(row.Fecha || "").trim().replace(/^'/, "");
+						if (!fecha || fecha === "undefined") return;
+						const key = normalizeSearchValue(fecha);
+						if (!key) return;
+						if (!store[key]) {
+							store[key] = [];
+						}
+						const group = mapSheetRowToConboy(row);
+						store[key].push(group);
+					});
+					return store;
+				} catch (error) {
+					console.error("No se pudo cargar CONBOY", error);
+					return {};
+				}
+			};
+
+			const saveConboyToApi = async (fecha, groups) => {
+				try {
+					if (!fecha || !groups || groups.length === 0) {
+						console.warn("No hay datos para guardar CONBOY");
+						return false;
+					}
+
+					const fechaTrim = String(fecha).trim();
+					const payloadRows = groups
+						.map((group) => mapConboyToSheetRow(fechaTrim, group))
+						.filter((row) => row.Grupo || row.Unidades || row.Comentario);
+					if (payloadRows.length === 0) {
+						console.warn("No hay filas CONBOY para enviar");
+						return false;
+					}
+
+					console.log("Enviando CONBOY:", payloadRows);
+					const response = await fetch(
+						`https://sheetdb.io/api/v1/${SHEETDB_ID}?sheet=${encodeURIComponent(
+							SHEETDB_TAB_CONBOY
+						)}`,
+						{
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ data: payloadRows }),
+						}
+					);
+
+					if (!response.ok) {
+						const errorText = await response.text();
+						console.error("Error POST CONBOY:", response.status, errorText);
+						return false;
+					}
+					const result = await response.json();
+					console.log("CONBOY guardado exitosamente:", result);
+					return true;
+				} catch (error) {
+					console.error("Error guardando CONBOY:", error);
+					return false;
+				}
+			};
+
 			const loadLogisticaFromApi = async () => {
 				try {
 					const response = await fetch(
@@ -1651,10 +1788,15 @@
 				if (apiRows.length > 0) {
 					logisticaRowsFromApi = apiRows;
 					localStorage.setItem(STORAGE_LOGISTICA, JSON.stringify(apiRows));
-					return;
+				} else {
+					localStorage.removeItem(STORAGE_LOGISTICA);
+					logisticaRowsFromApi = [];
 				}
-				localStorage.removeItem(STORAGE_LOGISTICA);
-				logisticaRowsFromApi = [];
+				// Cargar CONBOY desde la API
+				const conboyStore = await loadConboyFromApi();
+				if (Object.keys(conboyStore).length > 0) {
+					saveConboyStore(conboyStore);
+				}
 			};
 
 			const saveData = () => {
@@ -3178,8 +3320,6 @@
 				restoreDestinoAfterPrint();
 			});
 
-			const STORAGE_CONBOY = "cubicaje-conboy-grupos";
-
 			const formatUnitLabel = (unit) => {
 				const parts = [];
 				if (unit.economico) parts.push(`ECO ${unit.economico}`);
@@ -3240,6 +3380,7 @@
 			const conboyState = {
 				dateKey: "",
 				dateLabel: "",
+				dateRaw: "",
 				units: [],
 				groups: [],
 				activeGroupId: null,
@@ -3357,6 +3498,7 @@
 				const label = String(fechaLabel || "").trim();
 				const raw = String(fechaRaw || "").trim();
 				conboyState.dateLabel = label || raw;
+				conboyState.dateRaw = raw || label || "";
 				conboyState.dateKey = normalizeSearchValue(raw || label || "");
 				const rowsForDate = getConboyRowsForDate(raw, label);
 				conboyState.units = buildConboyUnits(rowsForDate);
@@ -3393,8 +3535,14 @@
 				persistConboyState();
 				renderConboy();
 			});
-			conboyApply?.addEventListener("click", () => {
+			conboyApply?.addEventListener("click", async () => {
 				persistConboyState();
+				if (conboyState.dateRaw && conboyState.groups.length > 0) {
+					console.log("Guardando CONBOY:", { fecha: conboyState.dateRaw, grupos: conboyState.groups });
+					await saveConboyToApi(conboyState.dateRaw, conboyState.groups);
+				} else {
+					console.warn("No hay datos para guardar. dateRaw:", conboyState.dateRaw, "groups:", conboyState.groups.length);
+				}
 				closeConboyModal();
 			});
 

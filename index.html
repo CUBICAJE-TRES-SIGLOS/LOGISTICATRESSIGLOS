@@ -207,7 +207,8 @@
 
 			.logistica-table {
 				table-layout: fixed;
-				min-width: 1600px;
+				width: 100%;
+				min-width: 100%;
 			}
 
 			thead th {
@@ -1004,6 +1005,10 @@
 					display: none;
 				}
 
+				.logistica-comment-row.is-empty {
+					display: none;
+				}
+
 				.logistica-table .col-almacen .stacked-field {
 					text-align: center;
 					min-height: 12px;
@@ -1049,8 +1054,9 @@
 				<table>
 					<thead>
 						<tr>
-							<th data-column="almacen" data-secondary="true">Almacén</th>
 							<th data-column="destino">Destino</th>
+							<th data-column="ordenCarga" data-extra="true">Orden de carga</th>
+							<th data-column="almacen" data-secondary="true">Almacén</th>
 							<th data-column="ubicacion" data-secondary="true" data-hide="true">Ubicación</th>
 							<th data-column="coordenadas" data-secondary="true" data-hide="true">Coordenadas</th>
 							<th data-column="cantidadAuto" data-extra="true">Cant. Auto</th>
@@ -1061,8 +1067,8 @@
 							<th data-column="unidad" data-hide="true">Unidad</th>
 							<th data-column="operador" data-secondary="true" data-hide="true">Operador</th>
 							<th data-column="acompanante" data-extra="true" data-hide="true">Acompañante</th>
-							<th data-column="empezar" data-extra="true">Orden de la carga</th>
-							<th data-column="acciones" data-extra="true">Empezar a cargar</th>
+							<th data-column="empezar" data-extra="true">Empezar a cargar</th>
+							<th data-column="acciones" data-extra="true">Acciones</th>
 						</tr>
 					</thead>
 					<tbody id="tableBody"></tbody>
@@ -1224,8 +1230,9 @@
 			const SHEETDB_TAB_LOGISTICA = "hoja de logistica";
 
 			const columns = [
-				{ key: "almacen", type: "text", list: "almacenOpciones" },
 				{ key: "destino", type: "text", list: "destinoOpciones" },
+				{ key: "ordenCarga", type: "text", extra: true },
+				{ key: "almacen", type: "text", list: "almacenOpciones" },
 				{ key: "ubicacion", type: "text" },
 				{ key: "coordenadas", type: "text" },
 				{ key: "cantidadAuto", type: "number", extra: true },
@@ -1236,7 +1243,6 @@
 				{ key: "unidad", type: "text" },
 				{ key: "operador", type: "text" },
 				{ key: "acompanante", type: "text", extra: true },
-				{ key: "ordenCarga", type: "text", extra: true },
 				{ key: "empezar", type: "datalist", extra: true },
 			];
 
@@ -1267,32 +1273,33 @@
 				"destino",
 				"ordenCarga",
 				"almacen",
+				"ubicacion",
+				"coordenadas",
 				"cantidadAuto",
 				"cantidadCamion",
 				"otras",
-				"economico",
-				"empezar",
-				"ubicacion",
-				"coordenadas",
 				"llantas",
+				"economico",
 				"unidad",
 				"operador",
 				"acompanante",
+				"empezar",
 				"cartaPorte",
 				"factura",
 				"traspaso",
 			];
 
-			const pdfColumnKeys = new Set([
-				"almacen",
+			const pdfColumnKeysArray = [
 				"destino",
+				"ordenCarga",
+				"almacen",
 				"cantidadAuto",
 				"cantidadCamion",
 				"otras",
 				"economico",
-				"ordenCarga",
 				"empezar",
-			]);
+			];
+			const pdfColumnKeys = new Set(pdfColumnKeysArray);
 
 			let columnsHidden = true;
 
@@ -1403,15 +1410,7 @@
 			const hasLogisticaRowContent = (row) =>
 				logisticaColumnKeys.some(
 					(key) => String(row?.[key] || "").trim() !== ""
-				);
-
-			const getLogisticaGroupComment = (rows) => {
-				if (!Array.isArray(rows)) return "";
-				const match = rows.find(
-					(row) => String(row?.comentariosGrupo || "").trim() !== ""
-				);
-				return match ? String(match.comentariosGrupo || "") : "";
-			};
+				) || String(row?.comentariosGrupo || "").trim() !== "";
 
 			const loadLocalData = () => {
 				const saved = localStorage.getItem(STORAGE_KEY);
@@ -1483,61 +1482,54 @@
 				cartaPorte: pickValue(row, ["carta porte", "Carta porte", "Carta Porte"]),
 				factura: pickValue(row, ["factura", "Factura"]),
 				traspaso: pickValue(row, ["traspaso", "Traspaso"]),
-				comentariosGrupo: pickValue(row, ["Comentarios", "Comentario", "Comentarios grupo"]),
+				comentariosGrupo: pickValue(row, ["comentarios", "Comentarios", "Comentario", "Comentarios grupo"]),
 			});
 
-			const mapDataToSheetRow = (row) => ({
-				"Fecha": row.fecha ? `'${row.fecha}` : "", // Prefijo ' fuerza formato texto en SheetDB
-				"Almacén": row.almacen || "",
-				"Destino": row.destino || "",
-				"Ubicación": row.ubicacion || "",
-				"Coordenadas": row.coordenadas || "",
-				"Cant. Auto": row.cantidadAuto || "",
-				"Cant. Camión": row.cantidadCamion || "",
-				"Otras": row.otras || "",
-				"Llantas": row.llantas || "",
-				"Económico": row.economico || "",
-				"Unidad": row.unidad || "",
-				"Operador": row.operador || "",
-				"Acompañante": row.acompanante || "",
-				"orden de carga": row.ordenCarga || "",
-				"Empezar a cargar": row.empezar || "",
-				"carta porte": row.cartaPorte || "",
-				"factura": row.factura || "",
-				"traspaso": row.traspaso || "",
-				"Comentarios": row.comentariosGrupo || "",
-			});
-
-			const logisticaGroupNotes = new Map();
-
-			const getLogisticaGroupNotesFromDom = () => {
-				const map = new Map();
-				if (!logisticaLists) return map;
-				logisticaLists
-					.querySelectorAll("textarea[data-group-comment='true']")
-					.forEach((textarea) => {
-						const key = textarea.dataset.fechaKey || "";
-						map.set(key, textarea.value || "");
-					});
-				return map;
+			const mapDataToSheetRow = (row) => {
+				const mapped = {};
+				// Order: Fecha, Destino, orden de carga, Almacen, Ubicacion, Coordenadas, Cant. Auto, Cant. Camion, Otras, Llantas, Economico, Unidad, Operador, Acompanante, Empezar a cargar, carta porte, factura, traspaso, comentarios
+				mapped["Fecha"] = row.fecha ? `'${row.fecha}` : "";
+				mapped["Destino"] = row.destino || "";
+				mapped["orden de carga"] = row.ordenCarga || "";
+				mapped["Almacén"] = row.almacen || "";
+				mapped["Ubicación"] = row.ubicacion || "";
+				mapped["Coordenadas"] = row.coordenadas || "";
+				mapped["Cant. Auto"] = row.cantidadAuto || "";
+				mapped["Cant. Camión"] = row.cantidadCamion || "";
+				mapped["Otras"] = row.otras || "";
+				mapped["Llantas"] = row.llantas || "";
+				mapped["Económico"] = row.economico || "";
+				mapped["Unidad"] = row.unidad || "";
+				mapped["Operador"] = row.operador || "";
+				mapped["Acompañante"] = row.acompanante || "";
+				mapped["Empezar a cargar"] = row.empezar || "";
+				mapped["carta porte"] = row.cartaPorte || "";
+				mapped["factura"] = row.factura || "";
+				mapped["traspaso"] = row.traspaso || "";
+				mapped["comentarios"] = row.comentariosGrupo || "";
+				return mapped;
 			};
 
-			const mapDataToSheetRowBorrador = (row) => ({
-				"Almacén": row.almacen || "",
-				"Destino": row.destino || "",
-				"Ubicación": row.ubicacion || "",
-				"Coordenadas": row.coordenadas || "",
-				"Cant. Auto": row.cantidadAuto || "",
-				"Cant. Camión": row.cantidadCamion || "",
-				"Otras": row.otras || "",
-				"Llantas": row.llantas || "",
-				"Económico": row.economico || "",
-				"Unidad": row.unidad || "",
-				"Operador": row.operador || "",
-				"Acompañante": row.acompanante || "",
-				"orden de carga": row.ordenCarga || "",
-				"Empezar a cargar": row.empezar || "",
-			});
+
+			const mapDataToSheetRowBorrador = (row) => {
+				const mapped = {};
+				// Order: Destino, orden de carga, Almacén, Ubicación, Coordenadas, Cant. Auto, Cant. Camión, Otras, Llantas, Económico, Unidad, Operador, Acompañante, Empezar a cargar
+				mapped["Destino"] = row.destino || "";
+				mapped["orden de carga"] = row.ordenCarga || "";
+				mapped["Almacén"] = row.almacen || "";
+				mapped["Ubicación"] = row.ubicacion || "";
+				mapped["Coordenadas"] = row.coordenadas || "";
+				mapped["Cant. Auto"] = row.cantidadAuto || "";
+				mapped["Cant. Camión"] = row.cantidadCamion || "";
+				mapped["Otras"] = row.otras || "";
+				mapped["Llantas"] = row.llantas || "";
+				mapped["Económico"] = row.economico || "";
+				mapped["Unidad"] = row.unidad || "";
+				mapped["Operador"] = row.operador || "";
+				mapped["Acompañante"] = row.acompanante || "";
+				mapped["Empezar a cargar"] = row.empezar || "";
+				return mapped;
+			};
 
 			const loadBorradorFromApi = async () => {
 				try {
@@ -2031,11 +2023,20 @@
 			const getLogisticaBodies = () =>
 				Array.from(logisticaLists?.querySelectorAll("tbody") || []);
 
-			const getLogisticaRowsFromTable = () =>
-				getLogisticaBodies().flatMap((body) =>
-					Array.from(body.querySelectorAll("tr"))
-						.filter((row) => !row.classList.contains("logistica-comment-row"))
-						.map((row) => {
+			const getLogisticaRowsFromTable = () => {
+				const rows = [];
+				getLogisticaBodies().forEach((body) => {
+					let lastData = null;
+					Array.from(body.querySelectorAll("tr")).forEach((row) => {
+						if (row.classList.contains("logistica-comment-row")) {
+							if (lastData) {
+								const textarea = row.querySelector("textarea");
+								lastData.comentariosGrupo = textarea
+									? textarea.value || ""
+									: "";
+							}
+							return;
+						}
 						const data = {};
 						logisticaColumnKeys.forEach((key, index) => {
 							const cell = row.children[index];
@@ -2059,9 +2060,12 @@
 								.filter((value) => value !== "")
 								.join(" · ");
 						});
-							return data;
-						})
-				);
+						rows.push(data);
+						lastData = data;
+					});
+				});
+				return rows;
+			};
 
 // Función para detectar si dos objetos de fila son iguales
 		const areRowsEqual = (row1, row2) => {
@@ -2160,15 +2164,11 @@
 			}
 
 			try {
-					const groupNotes = getLogisticaGroupNotesFromDom();
 				// Formatear fechas como texto (prefijo con comilla para que NOT sean números)
 				const rowsWithFormattedDates = currentRows.map((row) => ({
 					...row,
-						fecha: row.fecha ? `${row.fecha}` : "",
-						comentariosGrupo:
-							groupNotes.get(normalizeSearchValue(row.fecha || "")) ||
-							row.comentariosGrupo ||
-							"",
+					fecha: row.fecha ? `${row.fecha}` : "",
+					comentariosGrupo: String(row.comentariosGrupo || "").trim(),
 				}));
 
 				// Para minimizar reescrituras, comparamos con datos originales
@@ -2315,7 +2315,11 @@
 				}
 				savingBorrador = true;
 				try {
-					await sendRowsToSheet(SHEETDB_TAB_BORRADOR, getCurrentRows());
+					await sendRowsToSheet(
+						SHEETDB_TAB_BORRADOR,
+						getCurrentRows(),
+						mapDataToSheetRowBorrador
+					);
 				} catch (error) {
 					console.error("No se pudo guardar el borrador", error);
 				} finally {
@@ -2328,7 +2332,15 @@
 			};
 
 
-			const logisticaHiddenColumns = new Set();
+			const logisticaHiddenColumns = new Set([
+				"llantas",
+				"unidad",
+				"operador",
+				"acompanante",
+				"cartaPorte",
+				"factura",
+				"traspaso",
+			]);
 
 			const applyLogisticaColumnVisibility = () => {
 				logisticaColumnKeys.forEach((key) => {
@@ -2588,27 +2600,16 @@
 						.replace(/</g, "&lt;")
 						.replace(/>/g, "&gt;");
 
-				const getGroupNoteForDate = (dateValue, dateRows) => {
-					const dateKey = normalizeSearchValue(dateValue || "");
-					if (logisticaGroupNotes.has(dateKey)) {
-						return logisticaGroupNotes.get(dateKey) || "";
-					}
-					const initial = getLogisticaGroupComment(dateRows);
-					logisticaGroupNotes.set(dateKey, initial);
-					return initial;
-				};
-
-				const renderCommentRow = (dateValue, dateRows) => {
-					const dateKey = normalizeSearchValue(dateValue || "");
-					const value = getGroupNoteForDate(dateValue, dateRows);
+				const renderCommentRow = (value) => {
 					const colSpan = logisticaColumnKeys.length + 1;
+					const isEmpty = String(value || "").trim() === "";
 					return `
-						<tr class="logistica-comment-row">
+						<tr class="logistica-comment-row${isEmpty ? " is-empty" : ""}">
 							<td colspan="${colSpan}">
 								<div class="logistica-comment-label print-hide">Comentarios</div>
-								<textarea data-group-comment="true" data-fecha-key="${escapeAttr(
-									dateKey
-								)}" placeholder="Comentarios...">${escapeText(value)}</textarea>
+								<textarea data-row-comment="true" placeholder="Comentarios...">${escapeText(
+									value
+								)}</textarea>
 							</td>
 						</tr>
 					`;
@@ -2699,17 +2700,17 @@
 							<th data-column="destino" class="${headerClass("destino", "col-destino")}" title="Ocultar columna">Destino</th>
 							<th data-column="ordenCarga" data-extra="true" class="${headerClass("ordenCarga", "col-ordenCarga")}" title="Ocultar columna">Orden de carga</th>
 							<th data-column="almacen" data-secondary="true" class="${headerClass("almacen", "col-almacen")}" title="Ocultar columna">Almacén</th>
+							<th data-column="ubicacion" data-secondary="true" data-hide="true" class="${headerClass("ubicacion", "col-ubicacion")}" title="Ocultar columna">Ubicación</th>
+							<th data-column="coordenadas" data-secondary="true" data-hide="true" class="${headerClass("coordenadas", "col-coordenadas")}" title="Ocultar columna">Coordenadas</th>
 							<th data-column="cantidadAuto" data-extra="true" class="${headerClass("cantidadAuto", "col-cantidadAuto")}" title="Ocultar columna">Cant. Auto</th>
 							<th data-column="cantidadCamion" data-extra="true" class="${headerClass("cantidadCamion", "col-cantidadCamion")}" title="Ocultar columna">Cant. Camión</th>
 							<th data-column="otras" data-extra="true" class="${headerClass("otras", "col-otras")}" title="Ocultar columna">Otras</th>
-							<th data-column="economico" class="${headerClass("economico", "col-economico")}" title="Ocultar columna">Económico</th>
-							<th data-column="empezar" data-extra="true" class="${headerClass("empezar", "col-empezar")}" title="Ocultar columna">Empezar a cargar</th>
-							<th data-column="ubicacion" data-secondary="true" data-hide="true" class="${headerClass("ubicacion", "col-ubicacion")}" title="Ocultar columna">Ubicación</th>
-							<th data-column="coordenadas" data-secondary="true" data-hide="true" class="${headerClass("coordenadas", "col-coordenadas")}" title="Ocultar columna">Coordenadas</th>
 							<th data-column="llantas" class="${headerClass("llantas", "col-llantas")}" title="Ocultar columna">Llantas</th>
+							<th data-column="economico" class="${headerClass("economico", "col-economico")}" title="Ocultar columna">Económico</th>
 							<th data-column="unidad" data-hide="true" class="${headerClass("unidad", "col-unidad")}" title="Ocultar columna">Unidad</th>
 							<th data-column="operador" data-secondary="true" data-hide="true" class="${headerClass("operador", "col-operador")}" title="Ocultar columna">Operador</th>
 							<th data-column="acompanante" data-extra="true" data-hide="true" class="${headerClass("acompanante", "col-acompanante")}" title="Ocultar columna">Acompañante</th>
+							<th data-column="empezar" data-extra="true" class="${headerClass("empezar", "col-empezar")}" title="Ocultar columna">Empezar a cargar</th>
 							<th data-column="cartaPorte" data-extra="true" class="${headerClass("cartaPorte", "col-cartaPorte")}" title="Ocultar columna">Carta porte</th>
 							<th data-column="factura" data-extra="true" class="${headerClass("factura", "col-factura")}" title="Ocultar columna">Factura</th>
 							<th data-column="traspaso" data-extra="true" class="${headerClass("traspaso", "col-traspaso")}" title="Ocultar columna">Traspaso</th>
@@ -2740,6 +2741,7 @@
 								cartaPorte: row.cartaPorte || "",
 								factura: row.factura || "",
 								traspaso: row.traspaso || "",
+								comentarios: [],
 								unidades: [],
 							});
 						}
@@ -2749,6 +2751,9 @@
 							unidad: row.unidad || "",
 							operador: row.operador || "",
 						});
+						if (String(row.comentariosGrupo || "").trim() !== "") {
+							current.comentarios.push(String(row.comentariosGrupo || "").trim());
+						}
 					});
 
 					const mergeByUnidad = new Map();
@@ -2802,6 +2807,7 @@
 								cartaPorte: [],
 								factura: [],
 								traspaso: [],
+								comentarios: [],
 								empezar: [],
 							});
 						}
@@ -2823,6 +2829,7 @@
 						addUnique(entry.factura, row.factura);
 						addUnique(entry.traspaso, row.traspaso);
 						addUnique(entry.empezar, row.empezar);
+						addUnique(entry.comentarios, row.comentariosGrupo);
 						return;
 					}
 
@@ -2849,6 +2856,7 @@
 							cartaPorte: [],
 							factura: [],
 							traspaso: [],
+							comentarios: [],
 								empezar: [],
 							});
 					}
@@ -2874,6 +2882,7 @@
 					addUnique(entry.factura, row.factura);
 					addUnique(entry.traspaso, row.traspaso);
 					addUnique(entry.empezar, row.empezar);
+					addUnique(entry.comentarios, row.comentariosGrupo);
 					});
 
 					const sumList = (list) =>
@@ -2897,22 +2906,25 @@
 								{ value: joinInline(row.destinos) },
 								{ value: joinInline(row.ordenCarga) },
 								{ value: joinInline(row.almacenes) },
+								{ value: joinInline(row.ubicaciones) },
+								{ value: joinInline(row.coordenadas) },
 								{ value: joinInline(row.cantidadAuto) },
 								{ value: joinInline(row.cantidadCamion) },
 								{ value: joinInline(row.otras) },
-								{ value: joinInline(row.economicos), list: "economicoOpciones" },
-								{ value: joinInline(row.empezar) },
-								{ value: joinInline(row.ubicaciones) },
-								{ value: joinInline(row.coordenadas) },
 								{ value: llantasValue },
+								{ value: joinInline(row.economicos), list: "economicoOpciones" },
 								{ value: joinInline(row.unidades), list: "unidadOpciones" },
 								{ value: joinInline(row.operadores), list: "operadorOpciones" },
 								{ value: joinInline(row.acompanantes) },
+								{ value: joinInline(row.empezar) },
 								{ value: joinInline(row.cartaPorte) },
 								{ value: joinInline(row.factura) },
 								{ value: joinInline(row.traspaso) },
 							];
-							return `<tr>${renderCells(cells)}${renderActionCell()}</tr>`;
+							const commentValue = joinInline(row.comentarios || []);
+							return `<tr>${renderCells(cells)}${renderActionCell()}</tr>${renderCommentRow(
+								commentValue
+							)}`;
 						})
 						.join("");
 
@@ -2924,7 +2936,7 @@
 						{ length: logisticaColumnKeys.length },
 						() => ({ value: "" })
 					);
-					const emptyBody = `<tbody><tr>${renderCells(emptyCells)}${renderActionCell()}</tr>${renderCommentRow(dateLabel, [])}</tbody>`;
+					const emptyBody = `<tbody><tr>${renderCells(emptyCells)}${renderActionCell()}</tr>${renderCommentRow("")}</tbody>`;
 					logisticaLists.innerHTML = `
 						<details class="accordion-item">
 							<summary><div class="accordion-summary">Logística</div></summary>
@@ -2975,6 +2987,16 @@
 					body.querySelectorAll("textarea").forEach((textarea) => {
 						textarea.style.height = "auto";
 						textarea.style.height = `${textarea.scrollHeight}px`;
+					});
+				});
+			};
+
+			const applyLogisticaPrintCommentVisibility = () => {
+				getLogisticaBodies().forEach((body) => {
+					body.querySelectorAll("tr.logistica-comment-row").forEach((row) => {
+						const textarea = row.querySelector("textarea");
+						const isEmpty = !textarea || String(textarea.value || "").trim() === "";
+						row.classList.toggle("is-empty", isEmpty);
 					});
 				});
 			};
@@ -3060,12 +3082,14 @@
 				switchTab("logistica");
 				setTimeout(() => {
 					applyDestinoPrintTruncate();
+					applyLogisticaPrintCommentVisibility();
 					window.print();
 				}, 100);
 			});
 
 			window.addEventListener("beforeprint", () => {
 				applyDestinoPrintTruncate();
+				applyLogisticaPrintCommentVisibility();
 			});
 
 			window.addEventListener("afterprint", () => {
@@ -3412,13 +3436,6 @@
 				if (target instanceof HTMLTextAreaElement) {
 					target.style.height = "auto";
 					target.style.height = `${target.scrollHeight}px`;
-				}
-				if (
-					target instanceof HTMLTextAreaElement &&
-					target.matches("[data-group-comment='true']")
-				) {
-					const key = target.dataset.fechaKey || "";
-					logisticaGroupNotes.set(key, target.value || "");
 				}
 			});
 

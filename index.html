@@ -513,6 +513,14 @@
 				color: #0f172a;
 				cursor: pointer;
 				margin-bottom: 8px;
+				transition: all 0.2s ease;
+			}
+
+			.conboy-unit.used {
+				opacity: 0.4;
+				background: #e2e8f0;
+				color: #64748b;
+				cursor: default;
 			}
 
 			.conboy-unit-meta {
@@ -1214,12 +1222,12 @@
 			<option value="Central"></option>
 		</datalist>
 
-		<!-- MODAL CONBOY - Acomodador de Unidades -->
+		<!-- MODAL CONBOY - TRES SIGLOS -->
 		<div id="conboyModal" class="conboy-modal" style="display: none;" aria-hidden="true">
 			<div class="conboy-container">
 				<div class="conboy-header">
 					<h3>
-						<span>🚚 CONBOY - Acomodador de Unidades</span>
+						<span>🚚 CONBOY - TRES SIGLOS</span>
 						<span id="conboyDateLabel" class="conboy-date-label"></span>
 					</h3>
 					<button type="button" class="conboy-close" id="conboyClose">✕</button>
@@ -1231,8 +1239,8 @@
 					</div>
 					<div class="conboy-section">
 						<h4>Grupos Formados</h4>
-						<div id="conboyGroups" class="conboy-groups-container"></div>
 						<button type="button" class="secondary" id="conboyAddGroup">+ Crear Grupo</button>
+						<div id="conboyGroups" class="conboy-groups-container"></div>
 					</div>
 				</div>
 				<div class="conboy-footer">
@@ -1723,6 +1731,42 @@
 				}
 			};
 
+			const deleteConboyGroupFromApi = async (fecha, group) => {
+				try {
+					if (!fecha || !group) {
+						console.warn("No hay datos para eliminar del CONBOY");
+						return false;
+					}
+					const fechaTrim = String(fecha).trim();
+					const groupName = String(group.name || "").trim();
+					if (!groupName) return false;
+					
+					const deleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/FECHA/*${encodeURIComponent(fechaTrim)}*/GRUPO/*${encodeURIComponent(groupName)}*?sheet=${encodeURIComponent(SHEETDB_TAB_CONBOY)}`;
+					console.log("🗑️ Intentando eliminar:");
+					console.log("  - Fecha:", fechaTrim);
+					console.log("  - Grupo:", groupName);
+					console.log("  - URL:", deleteUrl);
+					
+					const response = await fetch(deleteUrl, { method: "DELETE" });
+					
+					if (!response.ok) {
+						const errorText = await response.text();
+						console.error("Error DELETE CONBOY:", response.status, errorText);
+						
+						if (response.status === 404) {
+							console.warn("⚠️ El grupo NO existe en la base de datos (solo en caché local)");
+							alert(`El grupo "${groupName}" no se encontró en la base de datos.\n\nPosible causa: el grupo nunca se guardó correctamente. Verifica que los datos se estén guardando al presionar "Aplicar Cambios".`);
+						}
+						return false;
+					}
+					console.log("✅ Grupo CONBOY eliminado exitosamente de la base de datos");
+					return true;
+				} catch (error) {
+					console.error("Error eliminando grupo CONBOY:", error);
+					return false;
+				}
+			};
+
 			const saveConboyToApi = async (fecha, groups) => {
 				try {
 					if (!fecha || !groups || groups.length === 0) {
@@ -1760,11 +1804,18 @@
 					if (!response.ok) {
 						const errorText = await response.text();
 						console.error("Error POST CONBOY:", response.status, errorText);
+						alert(`Error al guardar CONBOY: ${response.status} - ${errorText}`);
 						return false;
 					}
 					const result = await response.json();
-					console.log("CONBOY guardado exitosamente:", result);
-					alert("CONBOY guardado correctamente en la base de datos.");
+					console.log("CONBOY guardado exitosamente. Respuesta de SheetDB:", result);
+					console.log("Filas creadas:", result.created || 0);
+					if (result.created === 0) {
+						console.warn("⚠️ SheetDB retornó 'created: 0' - ninguna fila fue creada");
+						alert("Advertencia: La base de datos retornó éxito pero no creó filas. Revisa los nombres de las columnas en el sheet CONBOY (deben ser exactamente: FECHA, GRUPO, UNIDADES, COMENTARIO)");
+					} else {
+						alert(`CONBOY guardado: ${result.created} fila(s) creada(s).`);
+					}
 					return true;
 				} catch (error) {
 					console.error("Error guardando CONBOY:", error);
@@ -3421,6 +3472,16 @@
 
 			const renderConboy = () => {
 				if (!conboyAvailableUnits || !conboyGroups) return;
+				
+				// Crear set de unidades ya usadas en grupos
+				const usedEconomicos = new Set();
+				conboyState.groups.forEach(group => {
+					(group.units || []).forEach(unit => {
+						const eco = String(unit?.economico || unit || "").trim();
+						if (eco) usedEconomicos.add(eco);
+					});
+				});
+				
 				if (conboyState.units.length === 0) {
 					conboyAvailableUnits.innerHTML = "No hay unidades para esta fecha.";
 				} else {
@@ -3433,8 +3494,10 @@
 							]
 								.filter(Boolean)
 								.join(" · ");
+							const isUsed = usedEconomicos.has(String(unit.economico || "").trim());
+							const usedClass = isUsed ? " used" : "";
 							return `
-								<button type="button" class="conboy-unit" data-conboy-unit-index="${index}">
+								<button type="button" class="conboy-unit${usedClass}" data-conboy-unit-index="${index}">
 									<span>${ubicacionLabel}</span>
 									<span class="conboy-unit-meta">${meta}</span>
 								</button>
@@ -3480,7 +3543,7 @@
 			const createConboyGroup = () => {
 				const nextId = Date.now();
 				const index = conboyState.groups.length + 1;
-				conboyState.groups.push({
+				conboyState.groups.unshift({
 					id: nextId,
 					name: `Grupo ${index}`,
 					units: [],
@@ -3578,6 +3641,13 @@
 				if (!(target instanceof HTMLElement)) return;
 				const button = target.closest("[data-conboy-unit-index]");
 				if (!button) return;
+				
+				// Evitar agregar unidades ya usadas
+				if (button.classList.contains("used")) {
+					console.log("Esta unidad ya está en un grupo");
+					return;
+				}
+				
 				const index = Number(button.dataset.conboyUnitIndex || "-1");
 				const unit = conboyState.units[index];
 				addUnitToActiveGroup(unit);
@@ -3615,11 +3685,16 @@
 				const removeGroup = target.closest("[data-conboy-group-remove='true']");
 				if (removeGroup) {
 					const id = Number(removeGroup.dataset.groupId || "0");
+					const groupToRemove = conboyState.groups.find((g) => g.id === id);
+					if (!groupToRemove) return;
+					const confirmRemove = confirm(`¿Eliminar el grupo "${groupToRemove.name}" de la base de datos?`);
+					if (!confirmRemove) return;
 					conboyState.groups = conboyState.groups.filter((g) => g.id !== id);
 					if (conboyState.activeGroupId === id) {
 						conboyState.activeGroupId = conboyState.groups[0]?.id || null;
 					}
 					persistConboyState();
+					deleteConboyGroupFromApi(conboyState.dateRaw, groupToRemove);
 					renderConboy();
 					return;
 				}

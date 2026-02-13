@@ -975,6 +975,7 @@
 				.logistica-table .col-otras {
 					width: 44px;
 					max-width: 44px;
+					text-align: center;
 				}
 
 				.logistica-table .col-economico,
@@ -997,6 +998,7 @@
 				.logistica-table .col-empezar {
 					width: 60px;
 					max-width: 60px;
+					text-align: center;
 				}
 
 				.logistica-table .col-economico input {
@@ -1031,7 +1033,14 @@
 					font-size: 13.5px;
 					line-height: 1;
 					height: auto !important;
-					width: 100%;
+					
+
+				.logistica-table .col-ordenCarga input,
+				.logistica-table .col-cantidadAuto input,
+				.logistica-table .col-cantidadCamion input,
+				.logistica-table .col-otras input {
+					text-align: center;
+				}width: 100%;
 				}
 
 				.logistica-table textarea {
@@ -1654,17 +1663,17 @@
 					safeGroup.name || safeGroup.nombre || safeGroup.grupo || ""
 				).trim();
 				return {
-					Fecha: fecha ? `'${String(fecha).trim()}` : "",
-					Grupo: groupName || "Grupo",
-					Unidades: unidadesStr,
-					Comentario: String(safeGroup.note || "").trim(),
+					FECHA: fecha ? `'${String(fecha).trim()}` : "",
+					GRUPO: groupName || "Grupo",
+					UNIDADES: unidadesStr,
+					COMENTARIO: String(safeGroup.note || safeGroup.comentario || "").trim(),
 				};
 			};
 
 			const mapSheetRowToConboy = (row) => {
-				const unidadesStr = String(row.Unidades || "").trim();
+				const unidadesStr = pickValue(row, ["UNIDADES", "Unidades"]);
 				const units = unidadesStr
-					.split("; ")
+					.split(/\s*[;\-]+\s*/)
 					.map((economico) => {
 						return {
 							economico: economico.trim(),
@@ -1676,9 +1685,9 @@
 					.filter((u) => u.economico);
 				return {
 					id: Date.now(),
-					name: String(row.Grupo || "Grupo").trim(),
+					name: pickValue(row, ["GRUPO", "Grupo"]) || "Grupo",
 					units: units,
-					note: String(row.Comentario || "").trim(),
+					note: pickValue(row, ["COMENTARIO", "Comentario"]).trim(),
 				};
 			};
 
@@ -1694,15 +1703,18 @@
 					if (!Array.isArray(data) || data.length === 0) return {};
 					const store = {};
 					data.forEach((row) => {
-						const fecha = String(row.Fecha || "").trim().replace(/^'/, "");
+						const fecha = pickValue(row, ["FECHA", "Fecha"]).trim().replace(/^'/, "");
 						if (!fecha || fecha === "undefined") return;
-						const key = normalizeSearchValue(fecha);
-						if (!key) return;
-						if (!store[key]) {
-							store[key] = [];
-						}
+						const rawKey = normalizeSearchValue(fecha);
+						if (!rawKey) return;
+						const labelKey = normalizeSearchValue(getDateLabel(fecha));
 						const group = mapSheetRowToConboy(row);
-						store[key].push(group);
+						if (!store[rawKey]) store[rawKey] = [];
+						store[rawKey].push(group);
+						if (labelKey && labelKey !== rawKey) {
+							if (!store[labelKey]) store[labelKey] = [];
+							store[labelKey].push(group);
+						}
 					});
 					return store;
 				} catch (error) {
@@ -1719,15 +1731,21 @@
 					}
 
 					const fechaTrim = String(fecha).trim();
-					const payloadRows = groups
-						.map((group) => mapConboyToSheetRow(fechaTrim, group))
-						.filter((row) => row.Grupo || row.Unidades || row.Comentario);
+					console.log("Groups antes de mapear:", groups);
+					const payloadRows = groups.map((group) => {
+						console.log("Mapeando grupo:", group);
+						const mapped = mapConboyToSheetRow(fechaTrim, group);
+						console.log("Resultado mapeo:", mapped);
+						console.log("GRUPO:", mapped.GRUPO, "| UNIDADES:", mapped.UNIDADES, "| COMENTARIO:", mapped.COMENTARIO);
+						return mapped;
+					});
+					
 					if (payloadRows.length === 0) {
 						console.warn("No hay filas CONBOY para enviar");
 						return false;
 					}
 
-					console.log("Enviando CONBOY:", payloadRows);
+					console.log("Enviando CONBOY a SheetDB:", payloadRows);
 					const response = await fetch(
 						`https://sheetdb.io/api/v1/${SHEETDB_ID}?sheet=${encodeURIComponent(
 							SHEETDB_TAB_CONBOY
@@ -1746,9 +1764,11 @@
 					}
 					const result = await response.json();
 					console.log("CONBOY guardado exitosamente:", result);
+					alert("CONBOY guardado correctamente en la base de datos.");
 					return true;
 				} catch (error) {
 					console.error("Error guardando CONBOY:", error);
+					alert(`Error al guardar CONBOY: ${error?.message || "Intenta de nuevo."}`);
 					return false;
 				}
 			};
@@ -3539,7 +3559,14 @@
 				persistConboyState();
 				if (conboyState.dateRaw && conboyState.groups.length > 0) {
 					console.log("Guardando CONBOY:", { fecha: conboyState.dateRaw, grupos: conboyState.groups });
-					await saveConboyToApi(conboyState.dateRaw, conboyState.groups);
+					const saved = await saveConboyToApi(conboyState.dateRaw, conboyState.groups);
+					if (saved) {
+						// Recargar desde la API para confirmar
+						const conboyStore = await loadConboyFromApi();
+						if (Object.keys(conboyStore).length > 0) {
+							saveConboyStore(conboyStore);
+						}
+					}
 				} else {
 					console.warn("No hay datos para guardar. dateRaw:", conboyState.dateRaw, "groups:", conboyState.groups.length);
 				}

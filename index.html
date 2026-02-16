@@ -429,6 +429,101 @@
 				flex-direction: column;
 			}
 
+			.anexo-modal {
+				position: fixed;
+				inset: 0;
+				background: rgba(15, 23, 42, 0.45);
+				display: none;
+				align-items: center;
+				justify-content: center;
+				padding: 24px;
+				z-index: 2200;
+			}
+
+			.anexo-modal.is-open {
+				display: flex !important;
+			}
+
+			.anexo-container {
+				width: min(860px, 92vw);
+				max-height: 90vh;
+				overflow: hidden;
+				background: #ffffff;
+				border-radius: 18px;
+				box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+				display: flex;
+				flex-direction: column;
+			}
+
+			.anexo-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 16px 20px;
+				border-bottom: 1px solid var(--border);
+			}
+
+			.anexo-header h3 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.anexo-date-label {
+				font-size: 12px;
+				font-weight: 600;
+				color: var(--muted);
+			}
+
+			.anexo-close {
+				border: none;
+				background: #f1f5f9;
+				color: #0f172a;
+				width: 34px;
+				height: 34px;
+				border-radius: 999px;
+				font-size: 16px;
+				cursor: pointer;
+			}
+
+			.anexo-body {
+				padding: 18px 20px 4px;
+				overflow: auto;
+				display: grid;
+				gap: 14px;
+			}
+
+			.anexo-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+				gap: 12px;
+			}
+
+			.anexo-field {
+				display: grid;
+				gap: 6px;
+				font-size: 12px;
+				font-weight: 600;
+				color: var(--muted);
+			}
+
+			.anexo-field input {
+				font-size: 14px;
+				font-weight: 500;
+				color: var(--text);
+			}
+
+			.anexo-actions {
+				display: flex;
+				justify-content: flex-end;
+				gap: 12px;
+				padding: 14px 20px 20px;
+			}
+
 			.conboy-header {
 				display: flex;
 				align-items: center;
@@ -1177,6 +1272,7 @@
 					Guardar cambios
 				</button>
 				<button class="secondary" id="printLogistica">Generar PDF</button>
+				<button class="secondary" id="logisticaAnexo">Anexo</button>
 				<button class="secondary" id="showLogisticaColumns">
 					Mostrar columnas
 				</button>
@@ -1250,6 +1346,78 @@
 			</div>
 		</div>
 
+		<!-- MODAL ANEXO LOGISTICA -->
+		<div id="anexoModal" class="anexo-modal" aria-hidden="true">
+			<div class="anexo-container">
+				<div class="anexo-header">
+					<h3>
+						<span>📌 Anexo de Logistica</span>
+						<span id="anexoDateLabel" class="anexo-date-label"></span>
+					</h3>
+					<button type="button" class="anexo-close" id="anexoClose">✕</button>
+				</div>
+				<form id="anexoForm">
+					<div class="anexo-body">
+						<label class="anexo-field">
+							Fecha de logistica
+							<input type="text" id="anexoFecha" placeholder="dd/mm/aaaa" />
+						</label>
+						<div class="anexo-grid">
+							<label class="anexo-field">
+								Almacen
+								<input type="text" id="anexoAlmacen" list="almacenOpciones" />
+							</label>
+							<label class="anexo-field">
+								Destino
+								<input type="text" id="anexoDestino" list="destinoOpciones" />
+							</label>
+							<label class="anexo-field">
+								Ubicacion
+								<input type="text" id="anexoUbicacion" />
+							</label>
+							<label class="anexo-field">
+								Coordenadas
+								<input type="text" id="anexoCoordenadas" />
+							</label>
+							<label class="anexo-field">
+								Cant. Auto
+								<input type="number" id="anexoCantidadAuto" min="0" />
+							</label>
+							<label class="anexo-field">
+								Cant. Camion
+								<input type="number" id="anexoCantidadCamion" min="0" />
+							</label>
+							<label class="anexo-field">
+								Otras
+								<input type="number" id="anexoOtras" min="0" />
+							</label>
+							<label class="anexo-field">
+								Economico
+								<input type="text" id="anexoEconomico" list="economicoOpciones" />
+							</label>
+							<label class="anexo-field">
+								Operador
+								<input type="text" id="anexoOperador" list="operadorOpciones" />
+							</label>
+							<label class="anexo-field">
+								Acompanante
+								<input type="text" id="anexoAcompanante" />
+							</label>
+							<label class="anexo-field">
+								Empieza a cargar
+								<input type="text" id="anexoEmpezar" list="inicioOpciones" />
+							</label>
+							<input type="hidden" id="anexoUnidad" />
+						</div>
+					</div>
+					<div class="anexo-actions">
+						<button type="button" class="secondary" id="anexoCancel">Cancelar</button>
+						<button type="submit" class="primary">Guardar anexo</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
 		<script>
 			const tableBody = document.getElementById("tableBody");
 			const addRowButton = document.getElementById("addRow");
@@ -1275,6 +1443,7 @@
 			const logisticaSaveChangesButton = document.getElementById(
 				"logisticaSaveChanges"
 			);
+			const logisticaAnexoButton = document.getElementById("logisticaAnexo");
 			const showLogisticaColumnsButton = document.getElementById(
 				"showLogisticaColumns"
 			);
@@ -1303,6 +1472,26 @@
 			const conboyClear = document.getElementById("conboyClear");
 			const conboyApply = document.getElementById("conboyApply");
 			const conboyPrintSummary = document.getElementById("conboyPrintSummary");
+			const anexoModal = document.getElementById("anexoModal");
+			const anexoClose = document.getElementById("anexoClose");
+			const anexoCancel = document.getElementById("anexoCancel");
+			const anexoForm = document.getElementById("anexoForm");
+			const anexoDateLabel = document.getElementById("anexoDateLabel");
+			const anexoFechaInput = document.getElementById("anexoFecha");
+			const anexoAlmacenInput = document.getElementById("anexoAlmacen");
+			const anexoDestinoInput = document.getElementById("anexoDestino");
+			const anexoUbicacionInput = document.getElementById("anexoUbicacion");
+			const anexoCoordenadasInput = document.getElementById("anexoCoordenadas");
+			const anexoCantidadAutoInput = document.getElementById("anexoCantidadAuto");
+			const anexoCantidadCamionInput = document.getElementById(
+				"anexoCantidadCamion"
+			);
+			const anexoOtrasInput = document.getElementById("anexoOtras");
+			const anexoEconomicoInput = document.getElementById("anexoEconomico");
+			const anexoOperadorInput = document.getElementById("anexoOperador");
+			const anexoAcompananteInput = document.getElementById("anexoAcompanante");
+			const anexoEmpezarInput = document.getElementById("anexoEmpezar");
+			const anexoUnidadInput = document.getElementById("anexoUnidad");
 
 			const STORAGE_KEY = "cubicaje-hoja-libre";
 			const STORAGE_LOGISTICA = "cubicaje-logistica-dia";
@@ -1487,6 +1676,64 @@
 					month: "long",
 					day: "numeric",
 				})}`;
+			};
+
+			const getNumericToday = () => new Date().toLocaleDateString("es-MX");
+
+			const getAnexoFecha = () => {
+				const searchValue = String(logisticaSearchInput?.value || "").trim();
+				return searchValue || getNumericToday();
+			};
+
+			const resetAnexoForm = () => {
+				if (!anexoForm) return;
+				anexoForm.reset();
+				if (anexoUnidadInput) anexoUnidadInput.value = "";
+			};
+
+			const openAnexoModal = () => {
+				if (!anexoModal) return;
+				const fecha = getAnexoFecha();
+				if (anexoFechaInput) anexoFechaInput.value = fecha;
+				if (anexoDateLabel) {
+					anexoDateLabel.textContent = fecha ? `· ${fecha}` : "";
+				}
+				anexoModal.classList.add("is-open");
+				anexoModal.setAttribute("aria-hidden", "false");
+			};
+
+			const closeAnexoModal = () => {
+				if (!anexoModal) return;
+				anexoModal.classList.remove("is-open");
+				anexoModal.setAttribute("aria-hidden", "true");
+			};
+
+			const fillAnexoDestino = () => {
+				if (!anexoDestinoInput) return;
+				const destinoValue = String(anexoDestinoInput.value || "").trim();
+				if (!destinoValue) return;
+				const record = destinoIndex.get(destinoValue.toLowerCase());
+				if (!record) return;
+				if (anexoUbicacionInput) {
+					anexoUbicacionInput.value = record.direccion || "";
+				}
+				if (anexoCoordenadasInput) {
+					anexoCoordenadasInput.value = record.coordenadas || "";
+				}
+			};
+
+			const fillAnexoEconomico = () => {
+				if (!anexoEconomicoInput) return;
+				const economicoValue = String(anexoEconomicoInput.value || "").trim();
+				if (!economicoValue) return;
+				const record = economicoIndex.get(economicoValue.toLowerCase());
+				if (!record) return;
+				if (anexoUnidadInput) {
+					anexoUnidadInput.value = record.unidad || "";
+				}
+				if (anexoOperadorInput) {
+					anexoOperadorInput.value = record.operador || "";
+				}
 			};
 
 			const hasRowContent = (row) =>
@@ -3608,6 +3855,72 @@
 			conboyModal?.addEventListener("click", (event) => {
 				if (event.target === conboyModal) {
 					closeConboyModal();
+				}
+			});
+
+			logisticaAnexoButton?.addEventListener("click", () => {
+				resetAnexoForm();
+				openAnexoModal();
+			});
+
+			anexoClose?.addEventListener("click", closeAnexoModal);
+			anexoCancel?.addEventListener("click", closeAnexoModal);
+			anexoModal?.addEventListener("click", (event) => {
+				if (event.target === anexoModal) {
+					closeAnexoModal();
+				}
+			});
+
+			anexoDestinoInput?.addEventListener("change", fillAnexoDestino);
+			anexoDestinoInput?.addEventListener("blur", fillAnexoDestino);
+			anexoEconomicoInput?.addEventListener("change", fillAnexoEconomico);
+			anexoEconomicoInput?.addEventListener("blur", fillAnexoEconomico);
+
+			anexoForm?.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				const fecha = String(anexoFechaInput?.value || "").trim() || getAnexoFecha();
+				const row = {
+					fecha,
+					almacen: String(anexoAlmacenInput?.value || "").trim(),
+					destino: String(anexoDestinoInput?.value || "").trim(),
+					ubicacion: String(anexoUbicacionInput?.value || "").trim(),
+					coordenadas: String(anexoCoordenadasInput?.value || "").trim(),
+					cantidadAuto: String(anexoCantidadAutoInput?.value || "").trim(),
+					cantidadCamion: String(anexoCantidadCamionInput?.value || "").trim(),
+					otras: String(anexoOtrasInput?.value || "").trim(),
+					llantas: "",
+					economico: String(anexoEconomicoInput?.value || "").trim(),
+					unidad: String(anexoUnidadInput?.value || "").trim(),
+					operador: String(anexoOperadorInput?.value || "").trim(),
+					acompanante: String(anexoAcompananteInput?.value || "").trim(),
+					empezar: String(anexoEmpezarInput?.value || "").trim(),
+					ordenCarga: "",
+					cartaPorte: "",
+					factura: "",
+					traspaso: "",
+					comentariosGrupo: "",
+				};
+
+				const llantasTotal =
+					sumNumbers(row.cantidadAuto) +
+					sumNumbers(row.cantidadCamion) +
+					sumNumbers(row.otras);
+				row.llantas = llantasTotal > 0 ? String(llantasTotal) : "";
+
+				try {
+					await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, [row], null, {
+						clearFirst: false,
+					});
+					await loadLogisticaData();
+					renderLogistica(getLogisticaRowsForView());
+					closeAnexoModal();
+					resetAnexoForm();
+					alert("Anexo guardado en la base.");
+				} catch (error) {
+					console.error("No se pudo guardar anexo", error);
+					alert(
+						`No se pudo guardar el anexo. ${error?.message || "Intenta de nuevo."}`
+					);
 				}
 			});
 

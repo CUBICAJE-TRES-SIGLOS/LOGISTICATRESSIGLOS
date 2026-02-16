@@ -1979,7 +1979,7 @@
 					safeGroup.name || safeGroup.nombre || safeGroup.grupo || ""
 				).trim();
 				return {
-					FECHA: fecha ? `'${String(fecha).trim()}` : "",
+					FECHA: fecha ? String(fecha).trim() : "",
 					GRUPO: groupName || "Grupo",
 					UNIDADES: unidadesStr,
 					COMENTARIO: String(safeGroup.note || safeGroup.comentario || "").trim(),
@@ -2059,14 +2059,44 @@
 					const fechaTrim = String(fecha).trim();
 					const groupName = String(group.name || "").trim();
 					if (!groupName) return false;
-					
-					const deleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/FECHA/*${encodeURIComponent(fechaTrim)}*/GRUPO/*${encodeURIComponent(groupName)}*?sheet=${encodeURIComponent(SHEETDB_TAB_CONBOY)}`;
+					const unitsSource = Array.isArray(group.units) ? group.units : [];
+					const unidadesStr = unitsSource
+						.map((unit) => {
+							if (typeof unit === "string") return unit.trim();
+							return String(unit?.economico || "").trim();
+						})
+						.map((value) => extractEconomicoCode(value))
+						.filter(Boolean)
+						.join("-");
+					const deletePath = unidadesStr
+						? `FECHA/${encodeURIComponent(fechaTrim)}/GRUPO/${encodeURIComponent(
+								groupName
+							)}/UNIDADES/${encodeURIComponent(unidadesStr)}`
+						: `FECHA/${encodeURIComponent(fechaTrim)}/GRUPO/${encodeURIComponent(
+								groupName
+							)}`;
+					const deleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/${deletePath}?sheet=${encodeURIComponent(
+						SHEETDB_TAB_CONBOY
+					)}`;
 					console.log("🗑️ Intentando eliminar:");
 					console.log("  - Fecha:", fechaTrim);
 					console.log("  - Grupo:", groupName);
+					if (unidadesStr) {
+						console.log("  - Unidades:", unidadesStr);
+					}
 					console.log("  - URL:", deleteUrl);
 					
-					const response = await fetch(deleteUrl, { method: "DELETE" });
+					let response = await fetch(deleteUrl, { method: "DELETE" });
+					if (!response.ok && response.status === 404 && unidadesStr) {
+						const fallbackPath = `FECHA/${encodeURIComponent(
+							fechaTrim
+						)}/GRUPO/${encodeURIComponent(groupName)}`;
+						const fallbackUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/${fallbackPath}?sheet=${encodeURIComponent(
+							SHEETDB_TAB_CONBOY
+						)}`;
+						console.warn("Reintentando DELETE sin UNIDADES:", fallbackUrl);
+						response = await fetch(fallbackUrl, { method: "DELETE" });
+					}
 					
 					if (!response.ok) {
 						const errorText = await response.text();
@@ -4088,7 +4118,7 @@
 				}
 			});
 
-			conboyGroups?.addEventListener("click", (event) => {
+			conboyGroups?.addEventListener("click", async (event) => {
 				const target = event.target;
 				if (!(target instanceof HTMLElement)) return;
 				const select = target.closest("[data-conboy-group-select='true']");
@@ -4105,13 +4135,21 @@
 					if (!groupToRemove) return;
 					const confirmRemove = confirm(`¿Eliminar el grupo "${groupToRemove.name}" de la base de datos?`);
 					if (!confirmRemove) return;
-					conboyState.groups = conboyState.groups.filter((g) => g.id !== id);
-					if (conboyState.activeGroupId === id) {
-						conboyState.activeGroupId = conboyState.groups[0]?.id || null;
+					
+					// Primero intenta eliminar de la base de datos
+					const deleted = await deleteConboyGroupFromApi(conboyState.dateRaw, groupToRemove);
+					
+					// Si OK, ENTONCES elimina de la interfaz
+					if (deleted) {
+						conboyState.groups = conboyState.groups.filter((g) => g.id !== id);
+						if (conboyState.activeGroupId === id) {
+							conboyState.activeGroupId = conboyState.groups[0]?.id || null;
+						}
+						persistConboyState();
+						renderConboy();
+					} else {
+						alert("No se pudo eliminar de la base de datos. La interfaz no ha cambiado.");
 					}
-					persistConboyState();
-					deleteConboyGroupFromApi(conboyState.dateRaw, groupToRemove);
-					renderConboy();
 					return;
 				}
 				const removeUnit = target.closest("[data-conboy-remove='true']");

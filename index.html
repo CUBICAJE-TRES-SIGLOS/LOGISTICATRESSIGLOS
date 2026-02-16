@@ -1245,7 +1245,10 @@
 				<button class="tab-button" id="tabLogistica">Logística del día</button>
 				<button class="tab-button" id="tabDestinos">Destinos</button>
 			</div>
-			<div class="actions">
+		</header>
+
+		<section class="table-card tab-section active" id="borradorSection">
+			<div class="actions" id="borradorActions">
 				<button class="primary" id="addRow">Agregar fila</button>
 				<button class="secondary" id="saveDraft">Guardar borrador</button>
 				<button class="secondary" id="sendRow">Enviar y guardar</button>
@@ -1257,9 +1260,6 @@
 				<div class="column-panel-summary" id="borradorColumnSummary"></div>
 				<div class="column-toggle-list" id="borradorColumnToggles"></div>
 			</div>
-		</header>
-
-		<section class="table-card tab-section active" id="borradorSection">
 			<div class="table-wrap">
 				<table>
 					<thead>
@@ -3325,7 +3325,7 @@
 							.join("");
 						return `
 							<div class="conboy-print-date">
-								<div class="conboy-print-group conboy-print-header">
+								<div class="conboy-print-group conboy-print-header print-hide">
 									<div>Grupo</div>
 									<div>Economicos</div>
 									<div>Comentarios unidad</div>

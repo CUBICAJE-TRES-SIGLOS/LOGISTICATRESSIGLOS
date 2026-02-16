@@ -2185,18 +2185,19 @@
 					safeGroup.name || safeGroup.nombre || safeGroup.grupo || ""
 				).trim();
 				return {
-					FECHA: fecha ? `'${String(fecha).trim()}` : "",
-					GRUPO: groupName || "Grupo",
-					UNIDADES: unidadesStr,
-					COMENTARIO: String(safeGroup.note || safeGroup.comentario || "").trim(),
-					"COMENTARIOS POR UNIDAD": buildUnitCommentsString(unitsSource),
+					fecha: fecha ? `'${String(fecha).trim()}` : "",
+					grupo: groupName || "Grupo",
+					unidades: unidadesStr,
+					comentario: String(safeGroup.note || safeGroup.comentario || "").trim(),
+					"comentarios por unidad": buildUnitCommentsString(unitsSource),
 				};
 			};
 
 			const mapSheetRowToConboy = (row) => {
-				const unidadesStr = pickValue(row, ["UNIDADES", "Unidades"]);
+				const unidadesStr = pickValue(row, ["unidades", "UNIDADES", "Unidades"]);
 				const commentsMap = parseUnitCommentsString(
 					pickValue(row, [
+						"comentarios por unidad",
 						"COMENTARIOS POR UNIDAD",
 						"COMENTARIOS_UNIDAD",
 						"Comentarios unidad",
@@ -2217,10 +2218,11 @@
 					})
 					.filter((u) => u.economico);
 				return {
-					id: Date.now(),
-					name: pickValue(row, ["GRUPO", "Grupo"]) || "Grupo",
+					id: Date.now() + Math.floor(Math.random() * 1000),
+					sheetId: row?.id ? String(row.id).trim() : "",
+					name: pickValue(row, ["grupo", "GRUPO", "Grupo"]) || "Grupo",
 					units: units,
-					note: pickValue(row, ["COMENTARIO", "Comentario"]).trim(),
+					note: pickValue(row, ["comentario", "COMENTARIO", "Comentario"]).trim(),
 				};
 			};
 
@@ -2236,7 +2238,7 @@
 					if (!Array.isArray(data) || data.length === 0) return {};
 					const store = {};
 					data.forEach((row) => {
-						const fecha = pickValue(row, ["FECHA", "Fecha"]).trim().replace(/^'/, "");
+						const fecha = pickValue(row, ["fecha", "FECHA", "Fecha"]).trim().replace(/^'/, "");
 						if (!fecha || fecha === "undefined") return;
 						const rawKey = normalizeSearchValue(fecha);
 						if (!rawKey) return;
@@ -2262,6 +2264,18 @@
 						console.warn("No hay datos para eliminar del CONBOY");
 						return false;
 					}
+					const sheetId = String(group.sheetId || "").trim();
+					if (sheetId) {
+						const deleteByIdUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/id/${encodeURIComponent(
+							sheetId
+						)}?sheet=${encodeURIComponent(SHEETDB_TAB_CONBOY)}`;
+						const deleteByIdResponse = await fetch(deleteByIdUrl, { method: "DELETE" });
+						if (deleteByIdResponse.ok) {
+							console.log("✅ Grupo CONBOY eliminado por ID");
+							return true;
+						}
+						console.warn("No se pudo eliminar por ID, intentando por campos");
+					}
 					const normalizeText = (value) =>
 						String(value || "")
 							.trim()
@@ -2270,56 +2284,41 @@
 					const normalizeDate = (value) =>
 						String(value || "")
 							.trim()
-							.replace(/^'/, "");
+							.replace(/^'/, "")
+							.replace(/\s+/g, "")
+							.replace(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, (_m, d, m, y) =>
+								`${Number(d)}/${Number(m)}/${y}`
+							);
 					const normalizeUnits = (value) => {
 						const tokens = String(value || "")
-							.toUpperCase()
-							.match(/[A-Z0-9]+/g);
-						return tokens ? tokens.sort().join("-") : "";
+							.split(/[\s,;|/\\-]+/)
+							.map((part) => extractEconomicoCode(part))
+							.filter(Boolean);
+						return tokens.length > 0 ? tokens.sort().join("-") : "";
 					};
 					const fechaTrim = String(fecha).trim();
+					const normalizedFecha = normalizeDate(fechaTrim);
 					const groupName = String(group.name || "").trim();
 					if (!groupName) return false;
-					const unitsSource = Array.isArray(group.units) ? group.units : [];
-					const unidadesStr = unitsSource
-						.map((unit) => {
-							if (typeof unit === "string") return unit.trim();
-							return String(unit?.economico || "").trim();
-						})
-						.map((value) => extractEconomicoCode(value))
-						.filter(Boolean)
-						.join("-");
 					const expectedDate = normalizeDate(fechaTrim);
 					const expectedGroup = normalizeText(groupName);
-					const expectedUnits = normalizeUnits(unidadesStr);
-					const deletePath = unidadesStr
-						? `FECHA/${encodeURIComponent(fechaTrim)}/GRUPO/${encodeURIComponent(
-								groupName
-							)}/UNIDADES/${encodeURIComponent(unidadesStr)}`
-						: `FECHA/${encodeURIComponent(fechaTrim)}/GRUPO/${encodeURIComponent(
-								groupName
-							)}`;
+					const deletePath = `grupo/${encodeURIComponent(groupName)}`;
 					const deleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/${deletePath}?sheet=${encodeURIComponent(
 						SHEETDB_TAB_CONBOY
 					)}`;
 					console.log("🗑️ Intentando eliminar:");
 					console.log("  - Fecha:", fechaTrim);
 					console.log("  - Grupo:", groupName);
-					if (unidadesStr) {
-						console.log("  - Unidades:", unidadesStr);
-					}
 					console.log("  - URL:", deleteUrl);
 					
 					let response = await fetch(deleteUrl, { method: "DELETE" });
-					if (!response.ok && response.status === 404 && unidadesStr) {
-						const fallbackPath = `FECHA/${encodeURIComponent(
-							fechaTrim
-						)}/GRUPO/${encodeURIComponent(groupName)}`;
-						const fallbackUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/${fallbackPath}?sheet=${encodeURIComponent(
+					if (!response.ok && normalizedFecha && normalizedFecha !== fechaTrim) {
+						const altDeletePath = `grupo/${encodeURIComponent(groupName)}`;
+						const altDeleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/${altDeletePath}?sheet=${encodeURIComponent(
 							SHEETDB_TAB_CONBOY
 						)}`;
-						console.warn("Reintentando DELETE sin UNIDADES:", fallbackUrl);
-						response = await fetch(fallbackUrl, { method: "DELETE" });
+						console.warn("Reintentando DELETE con fecha normalizada:", altDeleteUrl);
+						response = await fetch(altDeleteUrl, { method: "DELETE" });
 					}
 					
 					if (!response.ok) {
@@ -2335,14 +2334,10 @@
 								if (searchResponse.ok) {
 									const rows = await searchResponse.json();
 									const match = (rows || []).find((row) => {
-										const rowDate = normalizeDate(row.FECHA || row.Fecha || "");
-										const rowGroup = normalizeText(row.GRUPO || row.Grupo || "");
-										const rowUnits = normalizeUnits(row.UNIDADES || row.Unidades || "");
-										const dateOk = rowDate === expectedDate;
-										if (expectedUnits) {
-											return dateOk && rowGroup === expectedGroup && rowUnits === expectedUnits;
-										}
-										return dateOk && rowGroup === expectedGroup;
+										const rowGroup = normalizeText(
+											row.grupo || row.GRUPO || row.Grupo || ""
+										);
+										return rowGroup === expectedGroup;
 									});
 									if (match && match.id) {
 										const deleteByIdUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/id/${encodeURIComponent(
@@ -2355,16 +2350,9 @@
 										}
 									}
 									if (match) {
-										const matchFecha = match.FECHA || match.Fecha || fechaTrim;
-										const matchGrupo = match.GRUPO || match.Grupo || groupName;
-										const matchUnidades = match.UNIDADES || match.Unidades || "";
-										const rowDeletePath = matchUnidades
-											? `FECHA/${encodeURIComponent(matchFecha)}/GRUPO/${encodeURIComponent(
-												matchGrupo
-											)}/UNIDADES/${encodeURIComponent(matchUnidades)}`
-											: `FECHA/${encodeURIComponent(matchFecha)}/GRUPO/${encodeURIComponent(
-												matchGrupo
-											)}`;
+										const matchGrupo =
+											match.grupo || match.GRUPO || match.Grupo || groupName;
+										const rowDeletePath = `grupo/${encodeURIComponent(matchGrupo)}`;
 										const rowDeleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/${rowDeletePath}?sheet=${encodeURIComponent(
 											SHEETDB_TAB_CONBOY
 										)}`;
@@ -2436,7 +2424,7 @@
 					console.log("Filas creadas:", result.created || 0);
 					if (result.created === 0) {
 						console.warn("⚠️ SheetDB retornó 'created: 0' - ninguna fila fue creada");
-						alert("Advertencia: La base de datos retornó éxito pero no creó filas. Revisa los nombres de las columnas en el sheet CONBOY (deben ser exactamente: FECHA, GRUPO, UNIDADES, COMENTARIO)");
+						alert("Advertencia: La base de datos retornó éxito pero no creó filas. Revisa los nombres de las columnas en el sheet CONBOY (deben ser exactamente: fecha, grupo, unidades, comentario)");
 					} else {
 						alert(`CONBOY guardado: ${result.created} fila(s) creada(s).`);
 					}

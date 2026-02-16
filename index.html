@@ -728,10 +728,16 @@
 
 			.conboy-print-group {
 				display: grid;
-				grid-template-columns: 1fr 1.4fr 1.6fr;
-				gap: 6px;
-				padding: 4px 0;
+				grid-template-columns: 0.20fr 0.44fr;
+				gap: 2px;
+				padding: 1px 0;
 				border-bottom: 1px dashed var(--border);
+			}
+
+			.conboy-print-units {
+				display: grid;
+				grid-template-columns: 0.20fr 0.45fr;
+				column-gap: 2px;
 			}
 
 			.conboy-print-header {
@@ -757,7 +763,7 @@
 
 			.conboy-print-comments {
 				font-size: 12px;
-				line-height: 1.15;
+				line-height: 1.1;
 				color: #1f2937;
 			}
 
@@ -2256,6 +2262,21 @@
 						console.warn("No hay datos para eliminar del CONBOY");
 						return false;
 					}
+					const normalizeText = (value) =>
+						String(value || "")
+							.trim()
+							.replace(/\s+/g, " ")
+							.toUpperCase();
+					const normalizeDate = (value) =>
+						String(value || "")
+							.trim()
+							.replace(/^'/, "");
+					const normalizeUnits = (value) => {
+						const tokens = String(value || "")
+							.toUpperCase()
+							.match(/[A-Z0-9]+/g);
+						return tokens ? tokens.sort().join("-") : "";
+					};
 					const fechaTrim = String(fecha).trim();
 					const groupName = String(group.name || "").trim();
 					if (!groupName) return false;
@@ -2268,6 +2289,9 @@
 						.map((value) => extractEconomicoCode(value))
 						.filter(Boolean)
 						.join("-");
+					const expectedDate = normalizeDate(fechaTrim);
+					const expectedGroup = normalizeText(groupName);
+					const expectedUnits = normalizeUnits(unidadesStr);
 					const deletePath = unidadesStr
 						? `FECHA/${encodeURIComponent(fechaTrim)}/GRUPO/${encodeURIComponent(
 								groupName
@@ -2301,10 +2325,61 @@
 					if (!response.ok) {
 						const errorText = await response.text();
 						console.error("Error DELETE CONBOY:", response.status, errorText);
-						
 						if (response.status === 404) {
+							// Fallback: buscar el registro y eliminar por ID o por valores exactos
+							try {
+								const searchUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}?sheet=${encodeURIComponent(
+									SHEETDB_TAB_CONBOY
+								)}`;
+								const searchResponse = await fetch(searchUrl);
+								if (searchResponse.ok) {
+									const rows = await searchResponse.json();
+									const match = (rows || []).find((row) => {
+										const rowDate = normalizeDate(row.FECHA || row.Fecha || "");
+										const rowGroup = normalizeText(row.GRUPO || row.Grupo || "");
+										const rowUnits = normalizeUnits(row.UNIDADES || row.Unidades || "");
+										const dateOk = rowDate === expectedDate;
+										if (expectedUnits) {
+											return dateOk && rowGroup === expectedGroup && rowUnits === expectedUnits;
+										}
+										return dateOk && rowGroup === expectedGroup;
+									});
+									if (match && match.id) {
+										const deleteByIdUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/id/${encodeURIComponent(
+											match.id
+										)}?sheet=${encodeURIComponent(SHEETDB_TAB_CONBOY)}`;
+										const deleteByIdResponse = await fetch(deleteByIdUrl, { method: "DELETE" });
+										if (deleteByIdResponse.ok) {
+											console.log("✅ Grupo CONBOY eliminado por ID");
+											return true;
+										}
+									}
+									if (match) {
+										const matchFecha = match.FECHA || match.Fecha || fechaTrim;
+										const matchGrupo = match.GRUPO || match.Grupo || groupName;
+										const matchUnidades = match.UNIDADES || match.Unidades || "";
+										const rowDeletePath = matchUnidades
+											? `FECHA/${encodeURIComponent(matchFecha)}/GRUPO/${encodeURIComponent(
+												matchGrupo
+											)}/UNIDADES/${encodeURIComponent(matchUnidades)}`
+											: `FECHA/${encodeURIComponent(matchFecha)}/GRUPO/${encodeURIComponent(
+												matchGrupo
+											)}`;
+										const rowDeleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/${rowDeletePath}?sheet=${encodeURIComponent(
+											SHEETDB_TAB_CONBOY
+										)}`;
+										const rowDeleteResponse = await fetch(rowDeleteUrl, { method: "DELETE" });
+										if (rowDeleteResponse.ok) {
+											console.log("✅ Grupo CONBOY eliminado por valores exactos");
+											return true;
+										}
+									}
+								}
+							} catch (lookupError) {
+								console.warn("Fallback delete por ID falló:", lookupError);
+							}
 							console.warn("⚠️ El grupo NO existe en la base de datos (solo en caché local)");
-							alert(`El grupo "${groupName}" no se encontró en la base de datos.\n\nPosible causa: el grupo nunca se guardó correctamente. Verifica que los datos se estén guardando al presionar "Aplicar Cambios".`);
+							alert(`El grupo "${groupName}" no se encontró en la base de datos.\n\nPosible causa: el grupo nunca se guardó correctamente o hay diferencias en el texto (espacios/guiones).`);
 						}
 						return false;
 					}
@@ -3266,10 +3341,9 @@
 					const lines = list
 						.map((unit) => {
 							if (typeof unit === "string") return "";
-							const eco = extractEconomicoCode(unit?.economico || "");
 							const comment = String(unit?.comment || "").trim();
-							if (!eco || !comment) return "";
-							return `${eco}: ${comment}`;
+							if (!comment) return "";
+							return comment;
 						})
 						.filter(Boolean);
 					return lines.length > 0 ? lines.join("<br>") : "Sin comentario";
@@ -3303,8 +3377,8 @@
 											.filter(Boolean)
 									)
 								);
-								const ecoText = economicos.length
-									? economicos.join(", ")
+								const ecoHtml = economicos.length
+									? economicos.map((eco) => escapeText(eco)).join("<br>")
 									: "Sin economico";
 									const noteText = String(group.note || "").trim();
 									const commentsText = formatUnitComments(group.units || []);
@@ -3313,10 +3387,10 @@
 											<div class="conboy-print-title">${escapeText(
 												group.name || "Grupo"
 											)}</div>
-											<div class="conboy-print-economicos">${escapeText(
-												ecoText
-											)}</div>
-											<div class="conboy-print-comments">${commentsText}</div>
+											<div class="conboy-print-units">
+												<div class="conboy-print-economicos">${ecoHtml}</div>
+												<div class="conboy-print-comments">${commentsText}</div>
+											</div>
 										</div>
 										${noteText ? `
 											<div class="conboy-print-note">${escapeText(noteText)}</div>` : ""}

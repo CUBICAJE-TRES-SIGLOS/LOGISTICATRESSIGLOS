@@ -731,7 +731,7 @@
 				grid-template-columns: 0.20fr 0.44fr;
 				gap: 2px;
 				padding: 1px 0;
-				border-bottom: 1px dashed var(--border);
+				border-bottom: 1px solid #cbd5e1;
 			}
 
 			.conboy-print-units {
@@ -2185,7 +2185,7 @@
 					safeGroup.name || safeGroup.nombre || safeGroup.grupo || ""
 				).trim();
 				return {
-					FECHA: fecha ? String(fecha).trim() : "",
+					FECHA: fecha ? `'${String(fecha).trim()}` : "",
 					GRUPO: groupName || "Grupo",
 					UNIDADES: unidadesStr,
 					COMENTARIO: String(safeGroup.note || safeGroup.comentario || "").trim(),
@@ -3346,7 +3346,7 @@
 							return comment;
 						})
 						.filter(Boolean);
-					return lines.length > 0 ? lines.join("<br>") : "Sin comentario";
+					return lines.length > 0 ? lines.join("<br>") : "";
 				};
 				const fallbackDate = new Date().toLocaleDateString("es-MX");
 				const visibleDates = Array.from(
@@ -3383,6 +3383,8 @@
 									const noteText = String(group.note || "").trim();
 									const commentsText = formatUnitComments(group.units || []);
 									return `
+										${noteText ? `
+											<div class="conboy-print-note">${escapeText(noteText)}</div>` : ""}
 										<div class="conboy-print-group">
 											<div class="conboy-print-title">${escapeText(
 												group.name || "Grupo"
@@ -3392,8 +3394,6 @@
 												<div class="conboy-print-comments">${commentsText}</div>
 											</div>
 										</div>
-										${noteText ? `
-											<div class="conboy-print-note">${escapeText(noteText)}</div>` : ""}
 									`;
 							})
 							.join("");

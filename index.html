@@ -1243,6 +1243,7 @@
 			<div class="tabs">
 				<button class="tab-button active" id="tabBorrador">Borrador</button>
 				<button class="tab-button" id="tabLogistica">Logística del día</button>
+				<button class="tab-button" id="tabDestinos">Destinos</button>
 			</div>
 			<div class="actions">
 				<button class="primary" id="addRow">Agregar fila</button>
@@ -1316,6 +1317,36 @@
 			<p class="footer-note" id="pdfColumnsNote"></p>
 			<div id="logisticaLists"></div>
 			<div id="conboyPrintSummary" class="conboy-print-summary print-only" aria-hidden="true"></div>
+		</section>
+
+		<!-- SECCION DESTINOS -->
+		<section class="table-card tab-section" id="destinosSection">
+			<h2>Destinos</h2>
+			<div class="actions">
+				<input
+					type="text"
+					id="destinosSearch"
+					class="search-field"
+					placeholder="Buscar por destino o dirección..."
+				/>
+				<button class="secondary" id="destinosSearchBtn">Buscar</button>
+				<button class="primary" id="destinosAgregar">+ Agregar Cliente Nuevo</button>
+			</div>
+			<div id="destinosTable" style="overflow-x: auto;">
+				<table style="width: 100%; border-collapse: collapse;">
+					<thead>
+						<tr>
+							<th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Destino</th>
+							<th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Dirección</th>
+							<th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Coordenadas</th>
+							<th style="padding: 12px; text-align: center; border-bottom: 2px solid #e2e8f0; width: 100px;">Acciones</th>
+						</tr>
+					</thead>
+					<tbody id="destinosTbody">
+						<!-- Se llenará dinámicamente -->
+					</tbody>
+				</table>
+			</div>
 		</section>
 
 		<datalist id="almacenOpciones">
@@ -1422,28 +1453,47 @@
 								Otras
 								<input type="number" id="anexoOtras" min="0" />
 							</label>
-							<label class="anexo-field">
-								Economico
-								<input type="text" id="anexoEconomico" list="economicoOpciones" />
-							</label>
-							<label class="anexo-field">
-								Operador
-								<input type="text" id="anexoOperador" list="operadorOpciones" />
-							</label>
-							<label class="anexo-field">
-								Acompanante
-								<input type="text" id="anexoAcompanante" />
-							</label>
-							<label class="anexo-field">
-								Empieza a cargar
-								<input type="text" id="anexoEmpezar" list="inicioOpciones" />
-							</label>
+							<div id="anexoUnidadesContainer" style="grid-column: 1 / -1; display: grid; gap: 12px;">
+								<!-- Aquí se generarán dinámicamente las filas de unidades -->
+							</div>
 							<input type="hidden" id="anexoUnidad" />
 						</div>
 					</div>
 					<div class="anexo-actions">
 						<button type="button" class="secondary" id="anexoCancel">Cancelar</button>
 						<button type="submit" class="primary">Guardar anexo</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- MODAL AGREGAR DESTINO -->
+		<div id="destinoModal" class="anexo-modal" aria-hidden="true">
+			<div class="anexo-container">
+				<div class="anexo-header">
+					<h3>
+						<span>📍 Agregar Cliente Nuevo</span>
+					</h3>
+					<button type="button" class="anexo-close" id="destinoClose">✕</button>
+				</div>
+				<form id="destinoForm">
+					<div class="anexo-body">
+						<label class="anexo-field">
+							Destino
+							<input type="text" id="destinoInput" placeholder="Nombre del destino" required />
+						</label>
+						<label class="anexo-field">
+							Dirección
+							<input type="text" id="direccionInput" placeholder="Dirección" required />
+						</label>
+						<label class="anexo-field">
+							Coordenadas
+							<input type="text" id="coordenadasInput" placeholder="Ej: 20°05'58.9\"N" />
+						</label>
+					</div>
+					<div class="anexo-actions">
+						<button type="button" class="secondary" id="destinoCancel">Cancelar</button>
+						<button type="submit" class="primary">Guardar Destino</button>
 					</div>
 				</form>
 			</div>
@@ -1463,8 +1513,10 @@
 			const operadorOpciones = document.getElementById("operadorOpciones");
 			const tabBorrador = document.getElementById("tabBorrador");
 			const tabLogistica = document.getElementById("tabLogistica");
+			const tabDestinos = document.getElementById("tabDestinos");
 			const borradorSection = document.getElementById("borradorSection");
 			const logisticaSection = document.getElementById("logisticaSection");
+			const destinosSection = document.getElementById("destinosSection");
 			const logisticaTitle = document.getElementById("logisticaTitle");
 			const logisticaDate = document.getElementById("logisticaDate");
 			const logisticaLists = document.getElementById("logisticaLists");
@@ -1518,11 +1570,21 @@
 				"anexoCantidadCamion"
 			);
 			const anexoOtrasInput = document.getElementById("anexoOtras");
-			const anexoEconomicoInput = document.getElementById("anexoEconomico");
-			const anexoOperadorInput = document.getElementById("anexoOperador");
-			const anexoAcompananteInput = document.getElementById("anexoAcompanante");
 			const anexoEmpezarInput = document.getElementById("anexoEmpezar");
 			const anexoUnidadInput = document.getElementById("anexoUnidad");
+			
+			// Elementos para DESTINOS
+			const destinoModal = document.getElementById("destinoModal");
+			const destinoClose = document.getElementById("destinoClose");
+			const destinoCancel = document.getElementById("destinoCancel");
+			const destinoForm = document.getElementById("destinoForm");
+			const destinoInput = document.getElementById("destinoInput");
+			const direccionInput = document.getElementById("direccionInput");
+			const coordenadasInput = document.getElementById("coordenadasInput");
+			const destinosAgregar = document.getElementById("destinosAgregar");
+			const destinosSearch = document.getElementById("destinosSearch");
+			const destinosSearchBtn = document.getElementById("destinosSearchBtn");
+			const destinosTbody = document.getElementById("destinosTbody");
 
 			const STORAGE_KEY = "cubicaje-hoja-libre";
 			const STORAGE_LOGISTICA = "cubicaje-logistica-dia";
@@ -1533,6 +1595,7 @@
 			const SHEETDB_TAB_BORRADOR = "borrador";
 			const SHEETDB_TAB_LOGISTICA = "hoja de logistica";
 			const SHEETDB_TAB_CONBOY = "CONBOY";
+			const SHEETDB_TAB_DESTINOS = "logistica";
 
 			const columns = [
 				{ key: "destino", type: "text", list: "destinoOpciones" },
@@ -1610,11 +1673,20 @@
 
 			const switchTab = (tab) => {
 				const isLogistica = tab === "logistica";
-				borradorSection.classList.toggle("active", !isLogistica);
-				logisticaSection.classList.toggle("active", isLogistica);
-				tabBorrador.classList.toggle("active", !isLogistica);
-				tabLogistica.classList.toggle("active", isLogistica);
+				const isDestinos = tab === "destinos";
+				borradorSection.classList.toggle("active", !isLogistica && !isDestinos);
+				logisticaSection.classList.toggle("active", isLogistica && !isDestinos);
+				destinosSection.classList.toggle("active", isDestinos);
+				tabBorrador.classList.toggle("active", !isLogistica && !isDestinos);
+				tabLogistica.classList.toggle("active", isLogistica && !isDestinos);
+				tabDestinos.classList.toggle("active", isDestinos);
 				document.body.classList.toggle("logistica-active", isLogistica);
+				
+				if (isDestinos) {
+					// Recarga datos desde la base de datos antes de renderizar
+					loadDestinos().then(() => renderDestinos());
+				}
+				
 				if (isLogistica && borradorColumnPanel) {
 					borradorColumnPanel.classList.remove("open");
 					borradorColumnPanel.setAttribute("aria-hidden", "true");
@@ -1722,6 +1794,99 @@
 				if (anexoUnidadInput) anexoUnidadInput.value = "";
 			};
 
+			// ========== FUNCIONES PARA DESTINOS ==========
+			let destinosData = [];
+
+			const loadDestinos = async () => {
+				try {
+					const response = await fetch(
+						`https://sheetdb.io/api/v1/${SHEETDB_ID}?sheet=${encodeURIComponent(SHEETDB_TAB_DESTINOS)}`
+					);
+					if (!response.ok) {
+						console.warn(`No se pudo cargar destinos (hoja puede no existir). Status: ${response.status}`);
+						return;
+					}
+					const data = await response.json();
+					destinosData = data || [];
+					console.log("Destinos cargados:", destinosData);
+				} catch (error) {
+					console.error("Error cargando destinos:", error);
+					destinosData = [];
+				}
+			};
+
+			const renderDestinos = (filterText = "") => {
+				if (!destinosTbody) return;
+				destinosTbody.innerHTML = "";
+				
+				// Helper para buscar columnas con diferentes variaciones
+				const getColumnValue = (row, ...possibleNames) => {
+					for (const name of possibleNames) {
+						if (row[name] !== undefined && row[name] !== null) {
+							return row[name];
+						}
+					}
+					return "";
+				};
+				
+				let filtered = destinosData;
+				if (filterText.trim()) {
+					const lowerFilter = filterText.toLowerCase();
+					filtered = destinosData.filter((row) => {
+						const destino = getColumnValue(row, "DESTINO", "Destino", "destino");
+						const direccion = getColumnValue(row, "DIRECCION", "Dirección", "direccion");
+						return (
+							destino.toLowerCase().includes(lowerFilter) ||
+							direccion.toLowerCase().includes(lowerFilter)
+						);
+					});
+				}
+
+				if (filtered.length === 0) {
+					destinosTbody.innerHTML = `
+						<tr>
+							<td colspan="4" style="text-align: center; padding: 20px; color: #999;">
+								No hay destinos registrados
+							</td>
+						</tr>
+					`;
+					return;
+				}
+
+				console.log("Primer registro para debug:", filtered[0]);
+				
+				filtered.forEach((row) => {
+					const destino = getColumnValue(row, "DESTINO", "Destino", "destino");
+					const direccion = getColumnValue(row, "DIRECCION", "Dirección", "direccion");
+					const cordenadas = getColumnValue(row, "CORDENADAS", "Cordenadas", "cordenada", "COORDENADAS", "Coordenadas", "coordenada", "COORDENADA", "ubicacion", "UBICACION");
+					
+					const tr = document.createElement("tr");
+					tr.style.cssText = "border-bottom: 1px solid #e2e8f0;";
+					tr.innerHTML = `
+						<td style="padding: 12px;">${destino}</td>
+						<td style="padding: 12px;">${direccion}</td>
+						<td style="padding: 12px;">${cordenadas}</td>
+						<td style="padding: 12px; text-align: center;">
+							<button type="button" class="danger" data-destino-delete="${destino}">Eliminar</button>
+						</td>
+					`;
+					destinosTbody.appendChild(tr);
+				});
+			};
+
+			const openDestinoModal = () => {
+				if (!destinoModal) return;
+				destinoForm.reset();
+				destinoModal.classList.add("is-open");
+				destinoModal.setAttribute("aria-hidden", "false");
+			};
+
+			const closeDestinoModal = () => {
+				if (!destinoModal) return;
+				destinoModal.classList.remove("is-open");
+				destinoModal.setAttribute("aria-hidden", "true");
+			};
+
 			const openAnexoModal = () => {
 				if (!anexoModal) return;
 				const fecha = getAnexoFecha();
@@ -1729,6 +1894,41 @@
 				if (anexoDateLabel) {
 					anexoDateLabel.textContent = fecha ? `· ${fecha}` : "";
 				}
+				
+				// Preguntar cuántas unidades quiere agregar
+				const cantidadStr = prompt("¿Cuántas unidades quieres agregar?", "1");
+				if (cantidadStr === null) return; // Canceló
+				const cantidad = Math.max(1, parseInt(cantidadStr) || 1);
+				
+				// Generar filas dinámicas
+				const container = document.getElementById("anexoUnidadesContainer");
+				if (container) {
+					container.innerHTML = "";
+					for (let i = 0; i < cantidad; i++) {
+						const unitRow = document.createElement("div");
+						unitRow.style.cssText = "display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;";
+						unitRow.innerHTML = `
+							<label class="anexo-field">
+								Unidad ${i + 1} - Económico
+								<input type="text" class="anexo-unit-economico" data-unit-index="${i}" list="economicoOpciones" />
+							</label>
+							<label class="anexo-field">
+								Operador
+								<input type="text" class="anexo-unit-operador" data-unit-index="${i}" list="operadorOpciones" />
+							</label>
+							<label class="anexo-field">
+								Acompañante
+								<input type="text" class="anexo-unit-acompanante" data-unit-index="${i}" />
+							</label>
+							<label class="anexo-field">
+								Empieza a cargar
+								<input type="text" class="anexo-unit-empezar" data-unit-index="${i}" list="inicioOpciones" />
+							</label>
+						`;
+						container.appendChild(unitRow);
+					}
+				}
+				
 				anexoModal.classList.add("is-open");
 				anexoModal.setAttribute("aria-hidden", "false");
 			};
@@ -3231,9 +3431,6 @@
 					"ubicacion",
 					"coordenadas",
 					"ordenCarga",
-					"cantidadAuto",
-					"cantidadCamion",
-					"otras",
 					"llantas",
 				]);
 
@@ -3383,7 +3580,7 @@
 				const mergeRowsForDate = (dateRows, fallbackDate) => {
 					const grouped = new Map();
 					dateRows.forEach((row) => {
-						const key = [row.destino, row.ubicacion, row.coordenadas, row.almacen]
+						const key = [row.destino, row.ubicacion, row.coordenadas, row.almacen, row.cantidadAuto, row.cantidadCamion, row.otras]
 							.map((value) => (value || "").trim().toLowerCase())
 							.join("||");
 						if (!grouped.has(key)) {
@@ -3573,9 +3770,9 @@
 								{ value: joinInline(row.almacenes) },
 								{ value: joinInline(row.ubicaciones) },
 								{ value: joinInline(row.coordenadas) },
-								{ value: joinInline(row.cantidadAuto) },
-								{ value: joinInline(row.cantidadCamion) },
-								{ value: joinInline(row.otras) },
+								{ value: row.cantidadAuto[0] || "" },
+								{ value: row.cantidadCamion[0] || "" },
+								{ value: row.otras[0] || "" },
 								{ value: llantasValue },
 								{ value: joinInline(row.economicos), list: "economicoOpciones" },
 								{ value: joinInline(row.unidades), list: "unidadOpciones" },
@@ -3709,6 +3906,9 @@
 			tabLogistica.addEventListener("click", () => {
 				renderLogistica(getLogisticaRowsForView());
 				switchTab("logistica");
+			});
+			tabDestinos?.addEventListener("click", () => {
+				switchTab("destinos");
 			});
 
 			showLogisticaColumnsButton?.addEventListener("click", () => {
@@ -4006,13 +4206,13 @@
 
 			anexoDestinoInput?.addEventListener("change", fillAnexoDestino);
 			anexoDestinoInput?.addEventListener("blur", fillAnexoDestino);
-			anexoEconomicoInput?.addEventListener("change", fillAnexoEconomico);
-			anexoEconomicoInput?.addEventListener("blur", fillAnexoEconomico);
 
 			anexoForm?.addEventListener("submit", async (event) => {
 				event.preventDefault();
 				const fecha = String(anexoFechaInput?.value || "").trim() || getAnexoFecha();
-				const row = {
+				
+				// Recopilar datos base (comunes para todas las unidades)
+				const baseRow = {
 					fecha,
 					almacen: String(anexoAlmacenInput?.value || "").trim(),
 					destino: String(anexoDestinoInput?.value || "").trim(),
@@ -4022,11 +4222,6 @@
 					cantidadCamion: String(anexoCantidadCamionInput?.value || "").trim(),
 					otras: String(anexoOtrasInput?.value || "").trim(),
 					llantas: "",
-					economico: String(anexoEconomicoInput?.value || "").trim(),
-					unidad: String(anexoUnidadInput?.value || "").trim(),
-					operador: String(anexoOperadorInput?.value || "").trim(),
-					acompanante: String(anexoAcompananteInput?.value || "").trim(),
-					empezar: String(anexoEmpezarInput?.value || "").trim(),
 					ordenCarga: "",
 					cartaPorte: "",
 					factura: "",
@@ -4035,25 +4230,141 @@
 				};
 
 				const llantasTotal =
-					sumNumbers(row.cantidadAuto) +
-					sumNumbers(row.cantidadCamion) +
-					sumNumbers(row.otras);
-				row.llantas = llantasTotal > 0 ? String(llantasTotal) : "";
+					sumNumbers(baseRow.cantidadAuto) +
+					sumNumbers(baseRow.cantidadCamion) +
+					sumNumbers(baseRow.otras);
+				baseRow.llantas = llantasTotal > 0 ? String(llantasTotal) : "";
+
+				// Recopilar unidades dinámicas
+				const unitRows = [];
+				const economicoInputs = document.querySelectorAll(".anexo-unit-economico");
+				economicoInputs.forEach((input, idx) => {
+					const economico = String(input.value || "").trim();
+					const operador = String(document.querySelector(`.anexo-unit-operador[data-unit-index="${idx}"]`)?.value || "").trim();
+					const acompanante = String(document.querySelector(`.anexo-unit-acompanante[data-unit-index="${idx}"]`)?.value || "").trim();
+					const empezar = String(document.querySelector(`.anexo-unit-empezar[data-unit-index="${idx}"]`)?.value || "").trim();
+					
+					if (economico) {  // Solo guardar si hay económico
+						const row = {
+							...baseRow,
+							economico,
+							unidad: "",
+							operador,
+							acompanante,
+							empezar,
+						};
+						unitRows.push(row);
+					}
+				});
+
+				if (unitRows.length === 0) {
+					alert("Debe ingresar al menos un económico.");
+					return;
+				}
 
 				try {
-					await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, [row], null, {
+					await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, unitRows, null, {
 						clearFirst: false,
 					});
 					await loadLogisticaData();
 					renderLogistica(getLogisticaRowsForView());
 					closeAnexoModal();
 					resetAnexoForm();
-					alert("Anexo guardado en la base.");
+					alert(`${unitRows.length} unidad(es) guardada(s) en la base.`);
 				} catch (error) {
 					console.error("No se pudo guardar anexo", error);
 					alert(
 						`No se pudo guardar el anexo. ${error?.message || "Intenta de nuevo."}`
 					);
+				}
+			});
+
+			// Event listeners para DESTINOS
+			destinosAgregar?.addEventListener("click", openDestinoModal);
+			destinoClose?.addEventListener("click", closeDestinoModal);
+			destinoCancel?.addEventListener("click", closeDestinoModal);
+			destinoModal?.addEventListener("click", (event) => {
+				if (event.target === destinoModal) closeDestinoModal();
+			});
+			destinosSearch?.addEventListener("input", (event) => {
+				renderDestinos(event.target.value);
+			});
+			destinosSearchBtn?.addEventListener("click", () => {
+				renderDestinos(destinosSearch?.value || "");
+			});
+
+			destinoForm?.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				const destino = String(destinoInput?.value || "").trim();
+				const direccion = String(direccionInput?.value || "").trim();
+				const cordenadas = String(coordenadasInput?.value || "").trim();
+
+				if (!destino || !direccion) {
+					alert("Destino y Dirección son requeridos.");
+					return;
+				}
+
+				try {
+					const baseUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}`;
+					const payload = {
+						data: [
+							{
+								DESTINO: destino,
+								DIRECCION: direccion,
+								CORDENADAS: cordenadas || ""
+							}
+						]
+					};
+
+					console.log("Payload enviando:", payload);
+
+					const response = await fetch(
+						`${baseUrl}?sheet=${encodeURIComponent(SHEETDB_TAB_DESTINOS)}`,
+						{
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify(payload)
+						}
+					);
+
+					if (!response.ok) {
+						const errorText = await response.text();
+						console.error("Error response:", errorText);
+						throw new Error(`Error al guardar (${response.status}): ${errorText}`);
+					}
+
+					console.log("Destino guardado exitosamente");
+					await loadDestinos();
+					renderDestinos();
+					closeDestinoModal();
+					destinoForm.reset();
+					alert("Destino guardado correctamente.");
+				} catch (error) {
+					console.error("Error guardando destino:", error);
+					alert(`Error al guardar destino: ${error?.message || "Intenta de nuevo."}`);
+				}
+			});
+
+			// Event delegation para eliminar destinos
+			destinosTbody?.addEventListener("click", async (event) => {
+				const deleteBtn = event.target.closest("[data-destino-delete]");
+				if (deleteBtn) {
+					const destino = deleteBtn.dataset.destinoDelete;
+					if (!confirm(`¿Eliminar destino "${destino}"?`)) return;
+					try {
+						const deleteUrl = `https://sheetdb.io/api/v1/${SHEETDB_ID}/DESTINO/${encodeURIComponent(destino)}?sheet=${encodeURIComponent(SHEETDB_TAB_DESTINOS)}`;
+						const resp = await fetch(deleteUrl, { method: "DELETE" });
+						if (resp.ok) {
+							await loadDestinos();
+							renderDestinos();
+							alert("Destino eliminado.");
+						} else {
+							alert("No se pudo eliminar el destino.");
+						}
+					} catch (error) {
+						console.error("Error eliminando destino:", error);
+						alert(`Error: ${error?.message}`);
+					}
 				}
 			});
 
@@ -4326,6 +4637,9 @@
 			loadData().catch((error) => console.error("Error al cargar", error));
 			loadLogisticaData().catch((error) =>
 				console.error("Error al cargar logística", error)
+			);
+			loadDestinos().catch((error) =>
+				console.error("Error al cargar destinos", error)
 			);
 		</script>
 	</body>

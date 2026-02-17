@@ -233,6 +233,12 @@
 				background: #f1f5f9;
 			}
 
+			.logistica-table tr.logistica-highlight-row td.col-almacen,
+			.logistica-table tr.logistica-highlight-row td.col-ordenCarga,
+			.logistica-table tr.logistica-highlight-row td.col-destino {
+				background: rgba(59, 130, 246, 0.15) !important;
+			}
+
 			tbody tr.unit-group {
 				background: rgba(251, 191, 36, 0.18);
 				box-shadow: inset 6px 0 0 rgba(245, 158, 11, 0.95);
@@ -291,6 +297,20 @@
 			.row-actions .danger {
 				background: #fee2e2;
 				color: #b91c1c;
+			}
+
+			.logistica-highlight-btn {
+				background: #dbeafe;
+				color: #1e40af;
+				border: 1px solid #93c5fd;
+				font-size: 11px;
+				padding: 5px 10px;
+			}
+
+			.logistica-highlight-btn.active {
+				background: #3b82f6;
+				color: #ffffff;
+				border-color: #2563eb;
 			}
 
 			.hidden-column {
@@ -826,6 +846,23 @@
 				width: 90px;
 			}
 
+			.logistica-table .col-economico {
+				text-align: center;
+			}
+
+			.logistica-table .col-economico input,
+			.logistica-table .col-economico textarea {
+				text-align: center;
+				padding-left: 4px;
+				padding-right: 4px;
+			}
+
+			.logistica-table .col-economico .stacked-field {
+				text-align: center;
+				padding-left: 2px;
+				padding-right: 2px;
+			}
+
 			.logistica-table .col-ordenCarga {
 				max-width: 110px;
 				width: 110px;
@@ -1008,6 +1045,22 @@
 					margin: 6mm;
 				}
 
+				#logisticaSection,
+				#logisticaSection * {
+					font-size: 11px !important;
+				}
+
+				#logisticaSection {
+					print-color-adjust: exact;
+					-webkit-print-color-adjust: exact;
+				}
+
+				.logistica-table tr.logistica-highlight-row td.col-almacen,
+				.logistica-table tr.logistica-highlight-row td.col-ordenCarga,
+				.logistica-table tr.logistica-highlight-row td.col-destino {
+					background: rgba(59, 130, 246, 0.15) !important;
+				}
+
 				.column-panel {
 					display: none !important;
 				}
@@ -1128,6 +1181,19 @@
 					max-width: 70px;
 				}
 
+				.logistica-table .col-economico {
+					text-align: center;
+				}
+
+				.logistica-table .col-economico input,
+				.logistica-table .col-economico textarea {
+					text-align: center;
+				}
+
+				.logistica-table .col-economico .stacked-field {
+					text-align: center;
+				}
+
 				.logistica-table .col-llantas {
 					width: 60px;
 					max-width: 60px;
@@ -1231,6 +1297,14 @@
 				.logistica-table .col-almacen .stacked-field {
 					text-align: center;
 					min-height: 12px;
+				}
+
+				.logistica-table .col-cantidadAuto .stacked-field,
+				.logistica-table .col-cantidadCamion .stacked-field,
+				.logistica-table .col-otras .stacked-field {
+					text-align: center;
+					min-height: 12px;
+					display: block;
 				}
 
 				.hidden-column {
@@ -1667,6 +1741,7 @@
 				"cartaPorte",
 				"factura",
 				"traspaso",
+				"pintar",
 			];
 
 			const pdfColumnKeysArray = [
@@ -2058,6 +2133,7 @@
 				factura: pickValue(row, ["factura", "Factura"]),
 				traspaso: pickValue(row, ["traspaso", "Traspaso"]),
 				comentariosGrupo: pickValue(row, ["comentarios", "Comentarios", "Comentario", "Comentarios grupo"]),
+				pintar: pickValue(row, ["PINTAR"]),
 			});
 
 			const mapDataToSheetRow = (row) => {
@@ -2082,6 +2158,7 @@
 				mapped["factura"] = row.factura || "";
 				mapped["traspaso"] = row.traspaso || "";
 				mapped["comentarios"] = row.comentariosGrupo || "";
+				mapped["PINTAR"] = row.pintar || "";
 				return mapped;
 			};
 
@@ -2987,10 +3064,17 @@
 								data[key] = inputs[0].value || "";
 								return;
 							}
-							data[key] = inputs
-								.map((input) => String(input.value || "").trim())
-								.filter((value) => value !== "")
-								.join(" · ");
+							const values = inputs.map((input) =>
+								String(input.value || "").trim()
+							);
+							const keepEmptySlots =
+								key === "almacen" ||
+								key === "cantidadAuto" ||
+								key === "cantidadCamion" ||
+								key === "otras";
+							data[key] = keepEmptySlots
+								? values.join(" · ")
+								: values.filter((value) => value !== "").join(" · ");
 						});
 						rows.push(data);
 						lastData = data;
@@ -3274,25 +3358,18 @@
 				"cartaPorte",
 				"factura",
 				"traspaso",
-			]);
+			"pintar",
+		]);
 
-			const applyLogisticaColumnVisibility = () => {
-				logisticaColumnKeys.forEach((key) => {
-					const hidden = logisticaHiddenColumns.has(key);
-					document
-						.querySelectorAll(`.logistica-table .col-${key}`)
-						.forEach((cell) => {
-							cell.classList.toggle("hidden-column", hidden);
-						});
-					document
-						.querySelectorAll(
-							`.logistica-table thead th[data-column="${key}"]`
-						)
-						.forEach((header) => {
-							header.classList.toggle("hidden-column", hidden);
-						});
-				});
-			};
+		const applyLogisticaColumnVisibility = () => {
+			logisticaColumnKeys.forEach((key) => {
+				const hidden = logisticaHiddenColumns.has(key);
+				document
+					.querySelectorAll(`.logistica-table .col-${key}`)
+					.forEach((cell) => {
+						cell.style.display = hidden ? "none" : "";
+					});
+			});
 
 			const getLogisticaColumnLabel = (key) => {
 				const header = logisticaLists?.querySelector(
@@ -3534,7 +3611,17 @@
 					"ubicacion",
 					"coordenadas",
 					"ordenCarga",
+					"cantidadAuto",
+					"cantidadCamion",
+					"otras",
 					"llantas",
+				]);
+
+				const keepEmptyStackedColumnKeys = new Set([
+					"almacen",
+					"cantidadAuto",
+					"cantidadCamion",
+					"otras",
 				]);
 
 				const escapeAttr = (value) =>
@@ -3591,11 +3678,13 @@
 				};
 
 				const renderStackedInputs = (value, listId = "", columnKey = "") => {
-					const raw = String(value || "").trim();
-					const parts = raw
-						.split(" · ")
+					const shouldKeepEmpty = keepEmptyStackedColumnKeys.has(columnKey);
+					const raw = value == null ? "" : String(value);
+					const parseSource = shouldKeepEmpty ? raw : raw.trim();
+					const parts = parseSource
+						.split("·")
 						.map((part) => part.trim())
-						.filter((part) => part !== "");
+						.filter((part) => (shouldKeepEmpty ? true : part !== ""));
 					if (parts.length === 0) {
 						return renderInput("", listId);
 					}
@@ -3626,6 +3715,9 @@
 				const renderDelete = () =>
 					`<button type="button" class="danger" data-logistica-delete="true">Eliminar</button>`;
 
+				const renderHighlightBtn = (isPintado = false) =>
+					`<button type="button" class="logistica-highlight-btn${isPintado ? ' active' : ''}" data-logistica-highlight="true" title="Resaltar fila">★</button>`;
+
 				const renderCells = (cells) =>
 					cells
 						.map((cell, index) => {
@@ -3648,8 +3740,8 @@
 						})
 						.join("");
 
-				const renderActionCell = () =>
-					`<td class="print-hide">${renderDelete()}</td>`;
+				const renderActionCell = (isPintado = false) =>
+					`<td class="print-hide">${renderHighlightBtn(isPintado)} ${renderDelete()}</td>`;
 
 				const headerClass = (key, baseClass) =>
 					`${baseClass}${pdfColumnKeys.has(key) ? "" : " print-hide"}`;
@@ -3725,9 +3817,14 @@
 						if (!list.includes(clean)) list.push(clean);
 					};
 
+					const addValue = (list, value) => {
+						const clean = value == null ? "" : String(value).trim();
+						list.push(clean);
+					};
+
 					const getAlmacenValues = (value) => {
 						const clean = (value || "").trim();
-						if (!clean) return [];
+						if (!clean) return [""];
 						const digits = clean.match(/\d+/g);
 						if (digits && digits.length > 0) return digits;
 						return [clean];
@@ -3770,19 +3867,20 @@
 								traspaso: [],
 								comentarios: [],
 								empezar: [],
+								pintar: row.pintar || "",
 							});
 						}
 						const entry = mergeByUnidad.get(key);
 						if (!entry.fecha && row.fecha) entry.fecha = row.fecha;
 						getAlmacenValues(row.almacen).forEach((value) =>
-							addUnique(entry.almacenes, value)
+							addValue(entry.almacenes, value)
 						);
 						addUnique(entry.destinos, row.destino);
 						addUnique(entry.ubicaciones, row.ubicacion);
 						addUnique(entry.coordenadas, row.coordenadas);
-						addUnique(entry.cantidadAuto, row.cantidadAuto);
-						addUnique(entry.cantidadCamion, row.cantidadCamion);
-						addUnique(entry.otras, row.otras);
+						addValue(entry.cantidadAuto, row.cantidadAuto);
+						addValue(entry.cantidadCamion, row.cantidadCamion);
+						addValue(entry.otras, row.otras);
 						addUnique(entry.llantas, row.llantas);
 						addUnique(entry.acompanantes, row.acompanante);
 						addUnique(entry.ordenCarga, row.ordenCarga);
@@ -3820,21 +3918,22 @@
 							factura: [],
 							traspaso: [],
 							comentarios: [],
-								empezar: [],
-							});
+							empezar: [],
+							pintar: row.pintar || "",
+						});
 					}
 
 					const entry = mergeByUnidad.get(key);
 					if (!entry.fecha && row.fecha) entry.fecha = row.fecha;
 					getAlmacenValues(row.almacen).forEach((value) =>
-						addUnique(entry.almacenes, value)
+						addValue(entry.almacenes, value)
 					);
 					addUnique(entry.destinos, row.destino);
 					addUnique(entry.ubicaciones, row.ubicacion);
 					addUnique(entry.coordenadas, row.coordenadas);
-					addUnique(entry.cantidadAuto, row.cantidadAuto);
-					addUnique(entry.cantidadCamion, row.cantidadCamion);
-					addUnique(entry.otras, row.otras);
+					addValue(entry.cantidadAuto, row.cantidadAuto);
+					addValue(entry.cantidadCamion, row.cantidadCamion);
+					addValue(entry.otras, row.otras);
 					addUnique(entry.llantas, row.llantas);
 					rowEconomicos.forEach((value) => addUnique(entry.economicos, value));
 					rowUnidades.forEach((value) => addUnique(entry.unidades, value));
@@ -3844,7 +3943,7 @@
 					addUnique(entry.cartaPorte, row.cartaPorte);
 					addUnique(entry.factura, row.factura);
 					addUnique(entry.traspaso, row.traspaso);
-						addUnique(entry.empezar, row.empezar);
+					addUnique(entry.empezar, row.empezar);
 						(row.comentarios || []).forEach((comentario) =>
 							addUnique(entry.comentarios, comentario)
 						);
@@ -3873,9 +3972,9 @@
 								{ value: joinInline(row.almacenes) },
 								{ value: joinInline(row.ubicaciones) },
 								{ value: joinInline(row.coordenadas) },
-								{ value: row.cantidadAuto[0] || "" },
-								{ value: row.cantidadCamion[0] || "" },
-								{ value: row.otras[0] || "" },
+								{ value: joinInline(row.cantidadAuto) },
+								{ value: joinInline(row.cantidadCamion) },
+								{ value: joinInline(row.otras) },
 								{ value: llantasValue },
 								{ value: joinInline(row.economicos), list: "economicoOpciones" },
 								{ value: joinInline(row.unidades), list: "unidadOpciones" },
@@ -3885,35 +3984,38 @@
 								{ value: joinInline(row.cartaPorte) },
 								{ value: joinInline(row.factura) },
 								{ value: joinInline(row.traspaso) },
-							];
-							const commentValue = joinInline(row.comentarios || []);
-							return `<tr>${renderCells(cells)}${renderActionCell()}</tr>${renderCommentRow(
-								commentValue
-							)}`;
-						})
-						.join("");
+							{ value: row.pintar || "" },
+						];
+						const commentValue = joinInline(row.comentarios || []);
+						const isPintado = String(row.pintar || "").trim().toUpperCase() === "PINTADO";
+						const rowClass = isPintado ? ' class="logistica-highlight-row"' : '';
+						return `<tr${rowClass}>${renderCells(cells)}${renderActionCell(isPintado)}</tr>${renderCommentRow(
+							commentValue
+						)}`;
+					})
+					.join("");
 
-					return bodyRows;
-				};
+				return bodyRows;
+			};
 
-				if (groupedByDate.size === 0) {
-					const emptyCells = Array.from(
-						{ length: logisticaColumnKeys.length },
-						() => ({ value: "" })
-					);
-					const emptyBody = `<tbody><tr>${renderCells(emptyCells)}${renderActionCell()}</tr>${renderCommentRow("")}</tbody>`;
-					logisticaLists.innerHTML = `
-						<details class="accordion-item">
-							<summary><div class="accordion-summary">Logística</div></summary>
-							<div class="accordion-content">
-								<button type="button" class="conboy-fab" data-conboy-open="true" data-conboy-fecha="${escapeAttr(dateLabel)}" data-conboy-fecha-label="${escapeAttr(dateLabel)}">CONBOY</button>
-								<div class="table-wrap">
-									<table class="logistica-table">${renderTableHeader()}${emptyBody}</table>
-								</div>
+			if (groupedByDate.size === 0) {
+				const emptyCells = Array.from(
+					{ length: logisticaColumnKeys.length },
+					() => ({ value: "" })
+				);
+				const emptyBody = `<tbody><tr>${renderCells(emptyCells)}${renderActionCell()}</tr>${renderCommentRow("")}</tbody>`;
+				logisticaLists.innerHTML = `
+					<details class="accordion-item">
+						<summary><div class="accordion-summary">Logística</div></summary>
+						<div class="accordion-content">
+							<button type="button" class="conboy-fab" data-conboy-open="true" data-conboy-fecha="${escapeAttr(dateLabel)}" data-conboy-fecha-label="${escapeAttr(dateLabel)}">CONBOY</button>
+							<div class="table-wrap">
+								<table class="logistica-table">${renderTableHeader()}${emptyBody}</table>
 							</div>
-						</details>
-					`;
-					applyLogisticaColumnVisibility();
+						</div>
+					</details>
+				`;
+				applyLogisticaColumnVisibility();
 					updateLogisticaColumnSummary();
 					autoResizeLogisticaTextareas();
 					return;
@@ -3945,8 +4047,9 @@
 				applyLogisticaSearch(logisticaSearchInput?.value || "");
 				renderConboyPrintSummary(rows);
 			};
+		};
 
-			const autoResizeLogisticaTextareas = () => {
+		const autoResizeLogisticaTextareas = () => {
 				getLogisticaBodies().forEach((body) => {
 					body.querySelectorAll("textarea").forEach((textarea) => {
 						textarea.style.height = "auto";
@@ -4708,6 +4811,24 @@
 					}
 					applyLogisticaColumnVisibility();
 					renderLogistica(getLogisticaRowsForView());
+					return;
+				}
+				if (target.matches("[data-logistica-highlight='true']")) {
+					const row = target.closest("tr");
+					if (row && !row.classList.contains("logistica-comment-row")) {
+						const isHighlighted = row.classList.toggle("logistica-highlight-row");
+						target.classList.toggle("active", isHighlighted);
+						const pintarIndex = logisticaColumnKeys.indexOf("pintar");
+						if (pintarIndex >= 0) {
+							const pintarCell = row.children[pintarIndex];
+							if (pintarCell) {
+								const pintarInput = pintarCell.querySelector("input, textarea");
+								if (pintarInput) {
+									pintarInput.value = isHighlighted ? "PINTADO" : "";
+								}
+							}
+						}
+					}
 					return;
 				}
 				if (target.matches("[data-logistica-delete='true']")) {

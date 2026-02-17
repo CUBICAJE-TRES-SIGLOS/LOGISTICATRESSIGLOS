@@ -134,6 +134,11 @@
 				max-width: 240px;
 			}
 
+			.logistica-inline-search {
+				width: min(320px, 100%);
+				margin: 0 0 8px;
+			}
+
 			.tabs {
 				display: inline-flex;
 				gap: 8px;
@@ -1123,7 +1128,7 @@
 				.logistica-table {
 					width: 100% !important;
 					min-width: 100% !important;
-					font-size: 13.5px;
+					font-size: 12.5px;
 					table-layout: auto;
 				}
 
@@ -1163,22 +1168,22 @@
 				}
 
 				.logistica-table .col-almacen {
-					width: 52px;
-					max-width: 52px;
+					width: 48px;
+					max-width: 48px;
 				}
 
 				.logistica-table .col-cantidadAuto,
 				.logistica-table .col-cantidadCamion,
 				.logistica-table .col-otras {
-					width: 44px;
-					max-width: 44px;
+					width: 40px;
+					max-width: 40px;
 					text-align: center;
 				}
 
 				.logistica-table .col-economico,
 				.logistica-table .col-acompanante {
-					width: 70px;
-					max-width: 70px;
+					width: 66px;
+					max-width: 66px;
 				}
 
 				.logistica-table .col-economico {
@@ -1195,19 +1200,19 @@
 				}
 
 				.logistica-table .col-llantas {
-					width: 60px;
-					max-width: 60px;
+					width: 54px;
+					max-width: 54px;
 				}
 
 				.logistica-table .col-destino {
-					width: 140px;
-					max-width: 140px;
+					width: 130px;
+					max-width: 130px;
 				}
 
 				.logistica-table .col-ordenCarga,
 				.logistica-table .col-empezar {
-					width: 60px;
-					max-width: 60px;
+					width: 56px;
+					max-width: 56px;
 					text-align: center;
 				}
 
@@ -1219,6 +1224,13 @@
 					display: block;
 					white-space: normal;
 					word-break: break-word;
+				}
+
+				.logistica-table .col-ordenCarga,
+				.logistica-table .col-ordenCarga .print-only,
+				.logistica-table .col-ordenCarga input,
+				.logistica-table .col-ordenCarga textarea {
+					text-align: center !important;
 				}
 
 				.conboy-print-summary {
@@ -1240,7 +1252,7 @@
 					margin: 0;
 					box-shadow: none;
 					background: transparent;
-					font-size: 13.5px;
+					font-size: 12.5px;
 					line-height: 1;
 					height: auto !important;
 					
@@ -1259,7 +1271,7 @@
 					margin: 0;
 					box-shadow: none;
 					background: transparent;
-					font-size: 13.5px;
+					font-size: 12.5px;
 					line-height: 1;
 					height: auto !important;
 					width: 100%;
@@ -1296,14 +1308,14 @@
 
 				.logistica-table .col-almacen .stacked-field {
 					text-align: center;
-					min-height: 12px;
+					min-height: 10px;
 				}
 
 				.logistica-table .col-cantidadAuto .stacked-field,
 				.logistica-table .col-cantidadCamion .stacked-field,
 				.logistica-table .col-otras .stacked-field {
 					text-align: center;
-					min-height: 12px;
+					min-height: 10px;
 					display: block;
 				}
 
@@ -4046,6 +4058,12 @@
 							<summary><div class="accordion-summary">Logística</div></summary>
 							<div class="accordion-content">
 								<button type="button" class="conboy-fab" data-conboy-open="true" data-conboy-fecha="${escapeAttr(dateLabel)}" data-conboy-fecha-label="${escapeAttr(dateLabel)}">CONBOY</button>
+								<input
+									type="text"
+									class="search-field logistica-inline-search print-hide"
+									placeholder="Buscar Económico o Destino..."
+									data-logistica-economico-search="true"
+								/>
 								<div class="table-wrap">
 									<table class="logistica-table">${renderTableHeader()}${emptyBody}</table>
 								</div>
@@ -4068,6 +4086,12 @@
 								</summary>
 								<div class="accordion-content">
 									<button type="button" class="conboy-fab" data-conboy-open="true" data-conboy-fecha="${escapeAttr(fecha)}" data-conboy-fecha-label="${escapeAttr(getDateLabel(fecha))}">CONBOY</button>
+									<input
+										type="text"
+										class="search-field logistica-inline-search print-hide"
+										placeholder="Buscar Económico o Destino..."
+										data-logistica-economico-search="true"
+									/>
 									<div class="table-wrap">
 										<table class="logistica-table">${renderTableHeader()}<tbody>${bodyRows}</tbody></table>
 									</div>
@@ -4090,6 +4114,48 @@
 					body.querySelectorAll("textarea").forEach((textarea) => {
 						textarea.style.height = "auto";
 						textarea.style.height = `${textarea.scrollHeight}px`;
+					});
+				});
+			};
+
+			const applyEconomicoSearchInDetail = (detail, query) => {
+				if (!(detail instanceof HTMLElement)) return;
+				const normalizedQuery = normalizeSearchValue(query || "");
+				const economicoIndex = logisticaColumnKeys.indexOf("economico");
+				const destinoIndex = logisticaColumnKeys.indexOf("destino");
+				if (economicoIndex < 0 && destinoIndex < 0) return;
+				detail.querySelectorAll("tbody").forEach((body) => {
+					const rows = Array.from(body.querySelectorAll("tr"));
+					rows.forEach((row, index) => {
+						if (row.classList.contains("logistica-comment-row")) return;
+						const commentRow = rows[index + 1];
+						const economicoCell = row.children[economicoIndex];
+						const destinoCell = row.children[destinoIndex];
+						const economicoValue = Array.from(
+							economicoCell?.querySelectorAll("input, textarea") || []
+						)
+							.map((input) => String(input.value || "").trim())
+							.filter(Boolean)
+							.join(" ");
+						const destinoValue = Array.from(
+							destinoCell?.querySelectorAll("input, textarea") || []
+						)
+							.map((input) => String(input.value || "").trim())
+							.filter(Boolean)
+							.join(" ");
+						const normalizedEconomico = normalizeSearchValue(economicoValue);
+						const normalizedDestino = normalizeSearchValue(destinoValue);
+						const isMatch =
+							normalizedQuery === "" ||
+							normalizedEconomico.includes(normalizedQuery) ||
+							normalizedDestino.includes(normalizedQuery);
+						row.style.display = isMatch ? "" : "none";
+						if (
+							commentRow &&
+							commentRow.classList.contains("logistica-comment-row")
+						) {
+							commentRow.style.display = isMatch ? "" : "none";
+						}
 					});
 				});
 			};
@@ -4866,6 +4932,14 @@
 
 			logisticaLists?.addEventListener("input", (event) => {
 				const target = event.target;
+				if (
+					target instanceof HTMLInputElement &&
+					target.matches("[data-logistica-economico-search='true']")
+				) {
+					const detail = target.closest("details.accordion-item");
+					applyEconomicoSearchInDetail(detail, target.value || "");
+					return;
+				}
 				if (!(target instanceof HTMLTextAreaElement)) return;
 				target.style.height = "auto";
 				target.style.height = `${target.scrollHeight}px`;

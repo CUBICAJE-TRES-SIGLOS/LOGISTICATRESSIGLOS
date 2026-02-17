@@ -2131,6 +2131,7 @@
 				cartaPorte: pickValue(row, ["carta porte", "Carta porte", "Carta Porte"]),
 				factura: pickValue(row, ["factura", "Factura"]),
 				traspaso: pickValue(row, ["traspaso", "Traspaso"]),
+				pintar: pickValue(row, ["Pintar", "pintar"]),
 				comentariosGrupo: pickValue(row, ["comentarios", "Comentarios", "Comentario", "Comentarios grupo"]),
 			});
 
@@ -2155,6 +2156,7 @@
 				mapped["carta porte"] = row.cartaPorte || "";
 				mapped["factura"] = row.factura || "";
 				mapped["traspaso"] = row.traspaso || "";
+				mapped["PINTAR"] = row.pintar || "";
 				mapped["comentarios"] = row.comentariosGrupo || "";
 				return mapped;
 			};
@@ -3073,6 +3075,9 @@
 								? values.join(" · ")
 								: values.filter((value) => value !== "").join(" · ");
 						});
+						data.pintar = row.classList.contains("logistica-highlight-row")
+							? "PINTADO"
+							: "";
 						rows.push(data);
 						lastData = data;
 					});
@@ -3088,6 +3093,9 @@
 				const val2 = (row2[key] || "").trim();
 				if (val1 !== val2) return false;
 			}
+				const pintar1 = String(row1.pintar || "").trim();
+				const pintar2 = String(row2.pintar || "").trim();
+				if (pintar1 !== pintar2) return false;
 				const comment1 = String(row1.comentariosGrupo || "").trim();
 				const comment2 = String(row2.comentariosGrupo || "").trim();
 				if (comment1 !== comment2) return false;
@@ -3181,6 +3189,12 @@
 				const rowsWithFormattedDates = currentRows.map((row) => ({
 					...row,
 					fecha: row.fecha ? `${row.fecha}` : "",
+					pintar:
+						String(row.pintar || "")
+							.trim()
+							.toUpperCase() === "PINTADO"
+							? "PINTADO"
+							: "",
 					comentariosGrupo: String(row.comentariosGrupo || "").trim(),
 				}));
 
@@ -3722,6 +3736,11 @@
 				const renderHighlightBtn = () =>
 					`<button type="button" class="logistica-highlight-btn" data-logistica-highlight="true" title="Resaltar fila">★</button>`;
 
+				const renderHighlightBtnWithState = (isActive = false) =>
+					`<button type="button" class="logistica-highlight-btn${
+						isActive ? " active" : ""
+					}" data-logistica-highlight="true" title="Resaltar fila">★</button>`;
+
 				const renderCells = (cells) =>
 					cells
 						.map((cell, index) => {
@@ -3744,8 +3763,10 @@
 						})
 						.join("");
 
-				const renderActionCell = () =>
-					`<td class="print-hide">${renderHighlightBtn()} ${renderDelete()}</td>`;
+				const renderActionCell = (isHighlighted = false) =>
+					`<td class="print-hide">${renderHighlightBtnWithState(
+						isHighlighted
+					)} ${renderDelete()}</td>`;
 
 				const headerClass = (key, baseClass) =>
 					`${baseClass}${pdfColumnKeys.has(key) ? "" : " print-hide"}`;
@@ -3798,11 +3819,18 @@
 								cartaPorte: row.cartaPorte || "",
 								factura: row.factura || "",
 								traspaso: row.traspaso || "",
+								pintar: row.pintar || "",
 								comentarios: [],
 								unidades: [],
 							});
 						}
 						const current = grouped.get(key);
+						if (
+							String(current.pintar || "").trim().toUpperCase() !== "PINTADO" &&
+							String(row.pintar || "").trim().toUpperCase() === "PINTADO"
+						) {
+							current.pintar = "PINTADO";
+						}
 						current.unidades.push({
 							economico: row.economico || "",
 							unidad: row.unidad || "",
@@ -3825,6 +3853,9 @@
 						const clean = value == null ? "" : String(value).trim();
 						list.push(clean);
 					};
+
+					const isPaintedValue = (value) =>
+						String(value || "").trim().toUpperCase() === "PINTADO";
 
 					const getAlmacenValues = (value) => {
 						const clean = (value || "").trim();
@@ -3870,10 +3901,12 @@
 								factura: [],
 								traspaso: [],
 								comentarios: [],
+								pintado: false,
 								empezar: [],
 							});
 						}
 						const entry = mergeByUnidad.get(key);
+						entry.pintado = entry.pintado || isPaintedValue(row.pintar);
 						if (!entry.fecha && row.fecha) entry.fecha = row.fecha;
 						getAlmacenValues(row.almacen).forEach((value) =>
 							addValue(entry.almacenes, value)
@@ -3921,11 +3954,13 @@
 							factura: [],
 							traspaso: [],
 							comentarios: [],
+							pintado: false,
 								empezar: [],
 							});
 					}
 
 					const entry = mergeByUnidad.get(key);
+					entry.pintado = entry.pintado || isPaintedValue(row.pintar);
 					if (!entry.fecha && row.fecha) entry.fecha = row.fecha;
 					getAlmacenValues(row.almacen).forEach((value) =>
 						addValue(entry.almacenes, value)
@@ -3957,6 +3992,7 @@
 					const mergedRows = Array.from(mergeByUnidad.values());
 					const bodyRows = mergedRows
 						.map((row) => {
+							const rowClass = row.pintado ? ' class="logistica-highlight-row"' : "";
 							const llantasTotal =
 								sumList(row.cantidadAuto) +
 								sumList(row.cantidadCamion) +
@@ -3988,7 +4024,9 @@
 								{ value: joinInline(row.traspaso) },
 							];
 							const commentValue = joinInline(row.comentarios || []);
-							return `<tr>${renderCells(cells)}${renderActionCell()}</tr>${renderCommentRow(
+							return `<tr${rowClass}>${renderCells(cells)}${renderActionCell(
+								row.pintado
+							)}</tr>${renderCommentRow(
 								commentValue
 							)}`;
 						})

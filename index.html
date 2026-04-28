@@ -206,6 +206,267 @@
 				padding-bottom: 8px;
 			}
 
+			#borradorSection thead th {
+				background: transparent;
+				border-bottom: 1px solid var(--paper-line);
+			}
+
+			#borradorSection tbody td {
+				border-bottom: 1px solid var(--paper-line);
+			}
+
+			#borradorSection tbody tr:hover {
+				background: rgba(37, 99, 235, 0.05);
+			}
+
+			#borradorSection input[type="text"],
+			#borradorSection input[type="number"] {
+				border: none;
+				border-radius: 0;
+				background: transparent;
+				padding: 6px 2px;
+				box-shadow: none;
+			}
+
+			#borradorSection input[type="text"]:focus,
+			#borradorSection input[type="number"]:focus {
+				outline: none;
+				background: rgba(255, 255, 255, 0.5);
+			}
+
+			#borradorSection .economico-mark-wrap {
+				display: grid;
+				grid-template-columns: 24px minmax(90px, 1fr);
+				align-items: center;
+				gap: 8px;
+			}
+
+			#borradorSection .economico-mark-wrap input[data-key="economico"] {
+				min-width: 0;
+			}
+
+			#borradorSection .economico-row-mark {
+				width: 16px;
+				height: 16px;
+				margin: 0 auto;
+				accent-color: var(--accent);
+				cursor: pointer;
+			}
+
+			#borradorSection th[data-column="economico"] {
+				position: relative;
+			}
+
+			#borradorSection .economico-header-mark {
+				position: absolute;
+				right: 8px;
+				top: 50%;
+				transform: translateY(-50%);
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.15s ease;
+				display: inline-flex;
+				align-items: center;
+			}
+
+			#borradorSection th[data-column="economico"]:hover .economico-header-mark,
+			#borradorSection th[data-column="economico"]:focus-within .economico-header-mark {
+				opacity: 1;
+				pointer-events: auto;
+			}
+
+			#borradorSection .economico-header-action {
+				border: 1px solid #93c5fd;
+				background: #eff6ff;
+				color: #1e3a8a;
+				border-radius: 8px;
+				padding: 3px 8px;
+				font-size: 11px;
+				font-weight: 700;
+				line-height: 1;
+				box-shadow: none;
+				cursor: pointer;
+			}
+
+			#borradorSection .economico-header-action:disabled {
+				opacity: 0.45;
+				cursor: not-allowed;
+			}
+
+			.quick-assign-modal {
+				position: fixed;
+				inset: 0;
+				background: rgba(15, 23, 42, 0.45);
+				display: none;
+				align-items: center;
+				justify-content: center;
+				z-index: 2300;
+				padding: 18px;
+			}
+
+			.quick-assign-modal.is-open {
+				display: flex;
+			}
+
+				.quick-assign-card {
+				width: min(540px, 96vw);
+				max-height: 80vh;
+				background: #ffffff;
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				padding: 16px;
+				box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
+				display: grid;
+				gap: 12px;
+				overflow: hidden;
+			}
+
+			.quick-assign-card h4 {
+				margin: 0;
+				font-size: 15px;
+			}
+
+			.quick-assign-search {
+				width: 100%;
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 8px 10px;
+				font-size: 14px;
+				background: #f8fafc;
+			}
+
+			.quick-assign-units {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+				max-height: 220px;
+				overflow-y: auto;
+				padding: 4px 2px;
+			}
+
+			.quick-assign-grid {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 210px;
+				gap: 12px;
+				align-items: start;
+			}
+
+			.quick-assign-side {
+				display: none;
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 10px;
+				background: #f8fafc;
+				gap: 8px;
+			}
+
+			.quick-assign-side.visible {
+				display: grid;
+			}
+
+			.quick-assign-side-title {
+				font-size: 12px;
+				font-weight: 700;
+				color: var(--muted);
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+			}
+
+			.quick-assign-jaulas {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+			}
+
+			.quick-assign-jaula-chip {
+				border: 1px solid #fdba74;
+				border-radius: 999px;
+				padding: 5px 10px;
+				font-size: 12px;
+				font-weight: 600;
+				background: #fff7ed;
+				color: #9a3412;
+				cursor: pointer;
+			}
+
+			.quick-assign-jaula-chip.selected {
+				border-color: #ea580c;
+				background: #ffedd5;
+				color: #7c2d12;
+			}
+
+			.quick-assign-side-hint {
+				font-size: 12px;
+				color: var(--muted);
+			}
+
+			.quick-assign-chip {
+				border: 1.5px solid var(--border);
+				border-radius: 999px;
+				padding: 5px 12px;
+				font-size: 13px;
+				font-weight: 600;
+				background: #f1f5f9;
+				color: var(--text);
+				cursor: pointer;
+				transition: background 0.12s, border-color 0.12s;
+				user-select: none;
+				line-height: 1;
+			}
+
+			.quick-assign-chip.selected {
+				background: rgba(37,99,235,0.12);
+				border-color: var(--accent);
+				color: var(--accent);
+			}
+
+			.quick-assign-chip.jaula-flag {
+				border-color: #f59e0b;
+			}
+
+			.quick-assign-chip.jaula-flag.selected {
+				background: rgba(245,158,11,0.12);
+				border-color: #d97706;
+				color: #92400e;
+			}
+
+			.quick-assign-jaula-note {
+				display: none;
+				font-size: 12px;
+				color: #92400e;
+				background: #fffbeb;
+				border: 1px solid #fde68a;
+				border-radius: 8px;
+				padding: 6px 10px;
+			}
+
+			.quick-assign-jaula-note.visible {
+				display: block;
+			}
+
+			.quick-assign-actions {
+				display: flex;
+				justify-content: flex-end;
+				gap: 8px;
+			}
+
+			@media (max-width: 760px) {
+				.quick-assign-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			#borradorSection .row-unit-selected td {
+				background: rgba(37, 99, 235, 0.09);
+			}
+
+			#borradorSection tr.row-shared-units td[data-column='economico'],
+			#borradorSection tr.row-shared-units td[data-column='unidad'] {
+				background: #fff7ed;
+				box-shadow: inset 0 0 0 1px #fdba74;
+				font-weight: 700;
+			}
+
 			table {
 				width: 100%;
 				border-collapse: collapse;
@@ -1502,14 +1763,12 @@
 					<thead>
 						<tr>
 							<th data-column="destino">Destino</th>
-							<th data-column="ordenCarga" data-extra="true">Orden de carga</th>
 							<th data-column="almacen" data-secondary="true">Almacén</th>
 							<th data-column="ubicacion" data-secondary="true" data-hide="true">Ubicación</th>
 							<th data-column="coordenadas" data-secondary="true" data-hide="true">Coordenadas</th>
 							<th data-column="cantidadAuto" data-extra="true">Cant. Auto</th>
 							<th data-column="cantidadCamion" data-extra="true">Cant. Camión</th>
 							<th data-column="otras" data-extra="true">Otras</th>
-							<th data-column="llantas" data-extra="true" data-hide="true">Llantas</th>
 							<th data-column="economico">Económico</th>
 							<th data-column="unidad" data-hide="true">Unidad</th>
 							<th data-column="operador" data-secondary="true" data-hide="true">Operador</th>
@@ -1734,6 +1993,29 @@
 				</form>
 			</div>
 		</div>
+
+		<div id="economicoAssignModal" class="quick-assign-modal" aria-hidden="true">
+			<form id="economicoAssignForm" class="quick-assign-card">
+				<h4 id="economicoAssignTitle">¿Qué unidad(es) llevarán estos pedidos?</h4>
+				<input type="text" id="economicoAssignSearch" class="quick-assign-search" placeholder="Buscar unidad..." autocomplete="off" />
+				<div class="quick-assign-grid">
+					<div id="economicoAssignUnits" class="quick-assign-units"></div>
+					<div id="economicoAssignJaulaPanel" class="quick-assign-side" aria-hidden="true">
+						<div class="quick-assign-side-title">Seleccionar jaula</div>
+						<div id="economicoAssignJaulas" class="quick-assign-jaulas"></div>
+						<div class="quick-assign-side-hint">Se aplicará en la columna Unidad solo para unidades con 🔄.</div>
+					</div>
+				</div>
+				<div id="economicoAssignJaulaNote" class="quick-assign-jaula-note">
+					🔔 Una o más unidades seleccionadas pueden cambiar su jaula (3S12, 3S33, 3S43, 3S46, 3S47).
+				</div>
+				<div id="economicoAssignSelected" style="font-size:12px;color:var(--muted);min-height:18px;"></div>
+				<div class="quick-assign-actions">
+					<button type="button" class="secondary" id="economicoAssignCancel">Cancelar</button>
+					<button type="submit" class="primary" id="economicoAssignApply">Aplicar</button>
+				</div>
+			</form>
+		</div>
 		<script>
 			const tableBody = document.getElementById("tableBody");
 			const addRowButton = document.getElementById("addRow");
@@ -1746,6 +2028,21 @@
 			const economicoOpciones = document.getElementById("economicoOpciones");
 			const unidadOpciones = document.getElementById("unidadOpciones");
 			const operadorOpciones = document.getElementById("operadorOpciones");
+			const economicoAssignModal = document.getElementById("economicoAssignModal");
+			const economicoAssignForm = document.getElementById("economicoAssignForm");
+			const economicoAssignTitle = document.getElementById("economicoAssignTitle");
+			const economicoAssignSearch = document.getElementById("economicoAssignSearch");
+			const economicoAssignUnits = document.getElementById("economicoAssignUnits");
+			const economicoAssignJaulaPanel = document.getElementById("economicoAssignJaulaPanel");
+			const economicoAssignJaulas = document.getElementById("economicoAssignJaulas");
+			const economicoAssignJaulaNote = document.getElementById("economicoAssignJaulaNote");
+			const economicoAssignSelectedLabel = document.getElementById("economicoAssignSelected");
+			const economicoAssignCancel = document.getElementById("economicoAssignCancel");
+
+			// Unidades con jaula intercambiable
+			const JAULA_UNITS = new Set(["3s12","3s33","3s43","3s46","3s47"]);
+			const JAULA_OPTIONS = ["JAULA ROJA", "JAULA AZUL", "JAULA AMARILLA", "JAULA VERDE", "JAULA N1", "JAULA 2"];
+			const isJaulaUnit = (eco) => JAULA_UNITS.has(String(eco || "").trim().toLowerCase());
 			const tabBorrador = document.getElementById("tabBorrador");
 			const tabLogistica = document.getElementById("tabLogistica");
 			const tabDestinos = document.getElementById("tabDestinos");
@@ -1835,15 +2132,13 @@
 
 			const columns = [
 				{ key: "destino", type: "text", list: "destinoOpciones" },
-				{ key: "ordenCarga", type: "text", extra: true },
 				{ key: "almacen", type: "text", list: "almacenOpciones" },
 				{ key: "ubicacion", type: "text" },
 				{ key: "coordenadas", type: "text" },
 				{ key: "cantidadAuto", type: "number", extra: true },
 				{ key: "cantidadCamion", type: "number", extra: true },
 				{ key: "otras", type: "text", extra: true },
-				{ key: "llantas", type: "number", extra: true, readOnly: true },
-				{ key: "economico", type: "text", list: "economicoOpciones" },
+				{ key: "economico", type: "text" },
 				{ key: "unidad", type: "text" },
 				{ key: "operador", type: "text" },
 			];
@@ -1858,14 +2153,12 @@
 			const borradorHideableKeys = new Set([
 				"ubicacion",
 				"coordenadas",
-				"llantas",
 				"unidad",
 				"operador",
 			]);
 			const borradorHiddenColumns = new Set([
 				"ubicacion",
 				"coordenadas",
-				"llantas",
 				"unidad",
 				"operador",
 			]);
@@ -2203,6 +2496,9 @@
 			const hasRowContent = (row) =>
 				columns.some((column) => String(row?.[column.key] || "").trim() !== "");
 
+			const getRowsWithContent = (rows) =>
+				(rows || []).filter((row) => hasRowContent(row));
+
 			const hasLogisticaRowContent = (row) =>
 				logisticaColumnKeys.some(
 					(key) => String(row?.[key] || "").trim() !== ""
@@ -2328,6 +2624,23 @@
 				mapped["Empezar a cargar"] = row.empezar || "";
 				return mapped;
 			};
+
+			const removeEmptySheetFields = (mappedRow) => {
+				const compact = {};
+				Object.keys(mappedRow || {}).forEach((key) => {
+					const value = mappedRow[key];
+					if (String(value ?? "").trim() !== "") {
+						compact[key] = value;
+					}
+				});
+				return compact;
+			};
+
+			const mapDataToCompactSheetRow = (row) =>
+				removeEmptySheetFields(mapDataToSheetRow(row));
+
+			const mapDataToCompactSheetRowBorrador = (row) =>
+				removeEmptySheetFields(mapDataToSheetRowBorrador(row));
 
 			const loadBorradorFromApi = async () => {
 				try {
@@ -2905,6 +3218,203 @@
 				saveData();
 			};
 
+			const setRowMarked = (row, marked) => {
+				if (!row) return;
+				const mark = row.querySelector("input[data-row-unit-select='true']");
+				if (!(mark instanceof HTMLInputElement)) return;
+				mark.checked = Boolean(marked);
+				row.classList.toggle("row-unit-selected", mark.checked);
+			};
+
+			const syncEconomicoHeaderCheckboxState = () => {
+				const headerAction = borradorSection?.querySelector(
+					"button[data-economico-assign='true']"
+				);
+				if (!(headerAction instanceof HTMLButtonElement)) return;
+				const marks = Array.from(
+					tableBody?.querySelectorAll("input[data-row-unit-select='true']") || []
+				).filter((item) => item instanceof HTMLInputElement);
+
+				const checkedCount = marks.filter((item) => item.checked).length;
+				headerAction.disabled = checkedCount === 0;
+				headerAction.textContent = checkedCount > 0 ? `Asignar (${checkedCount})` : "Asignar";
+				headerAction.title = checkedCount > 0
+					? `Asignar unidad a ${checkedCount} pedido(s) marcados`
+					: "Marca filas para asignar";
+			};
+
+			const ensureEconomicoHeaderMarker = () => {
+				const header = borradorSection?.querySelector("th[data-column='economico']");
+				if (!header) return;
+				const existing = header.querySelector(".economico-header-mark");
+				if (existing) return;
+
+				const wrapper = document.createElement("span");
+				wrapper.className = "economico-header-mark";
+
+				const action = document.createElement("button");
+				action.type = "button";
+				action.className = "economico-header-action";
+				action.dataset.economicoAssign = "true";
+				action.textContent = "Asignar";
+				action.disabled = true;
+				action.addEventListener("click", () => {
+					applyEconomicoToMarkedRows();
+				});
+
+				wrapper.appendChild(action);
+				header.appendChild(wrapper);
+				syncEconomicoHeaderCheckboxState();
+			};
+
+			let economicoAssignResolve = null;
+			let assignPickedUnits = []; // array of economico strings selected in the modal
+			let assignPickedJaula = "";
+
+			const renderAssignUnitChips = (filterText = "") => {
+				if (!economicoAssignUnits) return;
+				const normalized = String(filterText || "").trim().toLowerCase();
+				const keys = Array.from(economicoIndex.keys()).sort();
+				const filtered = normalized
+					? keys.filter((k) => k.includes(normalized))
+					: keys;
+
+				if (filtered.length === 0) {
+					economicoAssignUnits.innerHTML = '<span style="color:var(--muted);font-size:13px;">Sin coincidencias</span>';
+					return;
+				}
+
+				economicoAssignUnits.innerHTML = filtered.map((key) => {
+					const eco = economicoIndex.get(key)?.economico || key.toUpperCase();
+					const isSelected = assignPickedUnits.includes(eco.toLowerCase());
+					const isJaula = isJaulaUnit(eco);
+					const classes = [
+						"quick-assign-chip",
+						isSelected ? "selected" : "",
+						isJaula ? "jaula-flag" : "",
+					].filter(Boolean).join(" ");
+					return `<button type="button" class="${classes}" data-eco-chip="${eco}">${eco}${isJaula ? " 🔄" : ""}</button>`;
+				}).join("");
+			};
+
+			const updateAssignSelectedLabel = () => {
+				if (!economicoAssignSelectedLabel) return;
+				const hasJaula = assignPickedUnits.some(isJaulaUnit);
+				if (economicoAssignJaulaNote) {
+					economicoAssignJaulaNote.classList.toggle("visible", hasJaula);
+				}
+				if (economicoAssignJaulaPanel) {
+					economicoAssignJaulaPanel.classList.toggle("visible", hasJaula);
+					economicoAssignJaulaPanel.setAttribute("aria-hidden", String(!hasJaula));
+				}
+				if (hasJaula && economicoAssignJaulas) {
+					economicoAssignJaulas.innerHTML = JAULA_OPTIONS.map((jaula) => {
+						const selected = assignPickedJaula === jaula;
+						return `<button type="button" class="quick-assign-jaula-chip ${selected ? "selected" : ""}" data-jaula-chip="${jaula}">${jaula}</button>`;
+					}).join("");
+				} else if (economicoAssignJaulas) {
+					economicoAssignJaulas.innerHTML = "";
+				}
+				if (!hasJaula) assignPickedJaula = "";
+				economicoAssignSelectedLabel.textContent = assignPickedUnits.length > 0
+					? `Seleccionadas: ${assignPickedUnits.map(v => v.toUpperCase()).join(", ")}${hasJaula && assignPickedJaula ? ` | Jaula: ${assignPickedJaula}` : ""}`
+					: "Ninguna seleccionada";
+			};
+
+			const closeEconomicoAssignModal = () => {
+				if (!economicoAssignModal) return;
+				economicoAssignModal.classList.remove("is-open");
+				economicoAssignModal.setAttribute("aria-hidden", "true");
+				assignPickedUnits = [];
+				assignPickedJaula = "";
+				if (economicoAssignSearch) economicoAssignSearch.value = "";
+			};
+
+			const openEconomicoAssignModal = (count) =>
+				new Promise((resolve) => {
+					economicoAssignResolve = resolve;
+					assignPickedUnits = [];
+					assignPickedJaula = "";
+					if (economicoAssignTitle) {
+						economicoAssignTitle.textContent = `¿Qué unidad(es) llevarán ${count} pedido(s)?`;
+					}
+					renderAssignUnitChips("");
+					updateAssignSelectedLabel();
+					if (economicoAssignModal) {
+						economicoAssignModal.classList.add("is-open");
+						economicoAssignModal.setAttribute("aria-hidden", "false");
+					}
+					if (economicoAssignSearch) economicoAssignSearch.focus();
+				});
+
+			const moveRowsToTop = (rowsToMove) => {
+				const rowsSet = new Set(rowsToMove || []);
+				const allRows = Array.from(tableBody?.querySelectorAll("tr") || []);
+				const selected = allRows.filter((row) => rowsSet.has(row));
+				const others = allRows.filter((row) => !rowsSet.has(row));
+				selected.concat(others).forEach((row) => tableBody.appendChild(row));
+			};
+
+			const getMarkedBorradorRows = () =>
+				Array.from(tableBody?.querySelectorAll("tr") || []).filter((row) => {
+					const mark = row.querySelector("input[data-row-unit-select='true']");
+					return mark instanceof HTMLInputElement && mark.checked;
+				});
+
+			const applyEconomicoToMarkedRows = async () => {
+				const markedRows = getMarkedBorradorRows();
+				if (markedRows.length === 0) {
+					alert("Marca al menos una fila en la columna de Económico.");
+					return;
+				}
+
+				const picked = await openEconomicoAssignModal(markedRows.length);
+				if (!picked || !Array.isArray(picked.units) || picked.units.length === 0) return;
+				const pickedUnits = picked.units;
+				const pickedJaula = String(picked.jaula || "").trim();
+				const sharedMode = pickedUnits.length > 1;
+				const joinedUnits = pickedUnits.map((v) => v.toUpperCase()).join(" + ");
+				const hasJaulaUnits = pickedUnits.some(isJaulaUnit);
+
+				// Si hay varias unidades, se asignan juntas al mismo pedido (modo apoyo).
+				markedRows.forEach((row, idx) => {
+					const economicoInput = row.querySelector("input[data-key='economico']");
+					const unidadInput = row.querySelector("input[data-key='unidad']");
+
+					if (sharedMode) {
+						if (economicoInput) economicoInput.value = joinedUnits;
+						if (unidadInput) {
+							unidadInput.value = hasJaulaUnits && pickedJaula ? pickedJaula : "";
+						}
+						row.classList.add("row-shared-units");
+					} else {
+						const unitEco = pickedUnits[idx % pickedUnits.length];
+						if (economicoInput) economicoInput.value = unitEco.toUpperCase();
+						applyEconomicoAutoFill(row, unitEco);
+						if (pickedJaula && isJaulaUnit(unitEco) && unidadInput) {
+							unidadInput.value = pickedJaula;
+						}
+						row.classList.remove("row-shared-units");
+					}
+
+					updateBorradorRowHighlight(row);
+					const mark = row.querySelector("input[data-row-unit-select='true']");
+					if (mark instanceof HTMLInputElement) mark.checked = false;
+					row.classList.remove("row-unit-selected");
+				});
+
+				moveRowsToTop(markedRows);
+
+				saveData();
+				syncEconomicoHeaderCheckboxState();
+				const jaulaOnes = pickedUnits.filter(isJaulaUnit).map(v => v.toUpperCase());
+				const jaulaTxt = jaulaOnes.length > 0
+					? `\n⚠️ ${jaulaOnes.join(", ")} usan jaula${pickedJaula ? `: ${pickedJaula}` : ""}.`
+					: "";
+				const modeTxt = sharedMode ? " en apoyo conjunto" : "";
+				alert(`✅ ${markedRows.length} pedido(s) asignado(s)${modeTxt} a: ${pickedUnits.map(v=>v.toUpperCase()).join(", ")} y movidos al inicio.${jaulaTxt}`);
+			};
+
 			const createInput = (column, value = "") => {
 				const input = document.createElement("input");
 				input.value = value;
@@ -2922,6 +3432,10 @@
 
 				if (column.list) {
 					input.setAttribute("list", column.list);
+				}
+
+				if (column.key === "economico") {
+					input.removeAttribute("list");
 				}
 
 				if (column.readOnly) {
@@ -3084,7 +3598,27 @@
 					}
 					const input = createInput(column, rowData[column.key] || "");
 					input.addEventListener("input", () => updateBorradorRowHighlight(row));
-					cell.appendChild(input);
+					if (column.key === "economico") {
+						const wrapper = document.createElement("div");
+						wrapper.className = "economico-mark-wrap";
+
+						const mark = document.createElement("input");
+						mark.type = "checkbox";
+						mark.dataset.rowUnitSelect = "true";
+						mark.className = "economico-row-mark";
+						mark.title =
+							"Marcar fila para asignación masiva de unidad (Ctrl+U)";
+						mark.addEventListener("change", () => {
+							row.classList.toggle("row-unit-selected", mark.checked);
+							syncEconomicoHeaderCheckboxState();
+						});
+
+						wrapper.appendChild(mark);
+						wrapper.appendChild(input);
+						cell.appendChild(wrapper);
+					} else {
+						cell.appendChild(input);
+					}
 					row.appendChild(cell);
 				});
 
@@ -3123,6 +3657,7 @@
 					}
 					saveData();
 					applyBorradorRowColors();
+					syncEconomicoHeaderCheckboxState();
 				});
 				actions.appendChild(deleteButton);
 				actionsCell.appendChild(actions);
@@ -3162,7 +3697,32 @@
 				updateLlantasValue(row);
 				saveData();
 				applyBorradorRowColors();
+				syncEconomicoHeaderCheckboxState();
 				return row;
+			};
+
+			const MIN_TRAILING_EMPTY_ROWS = 8;
+
+			const ensureTrailingEmptyRows = (minimum = MIN_TRAILING_EMPTY_ROWS) => {
+				const rows = Array.from(tableBody.querySelectorAll("tr"));
+				if (rows.length === 0) {
+					for (let index = 0; index < minimum; index += 1) {
+						addRow();
+					}
+					return;
+				}
+
+				let trailingEmpty = 0;
+				for (let index = rows.length - 1; index >= 0; index -= 1) {
+					const rowData = getRowDataFromRow(rows[index]);
+					if (hasRowContent(rowData)) break;
+					trailingEmpty += 1;
+				}
+
+				const missing = Math.max(0, minimum - trailingEmpty);
+				for (let index = 0; index < missing; index += 1) {
+					addRow();
+				}
 			};
 
 			const getCurrentRows = () =>
@@ -3491,10 +4051,11 @@
 				}
 				savingBorrador = true;
 				try {
+					const filledRows = getRowsWithContent(getCurrentRows());
 					await sendRowsToSheet(
 						SHEETDB_TAB_BORRADOR,
-						getCurrentRows(),
-						mapDataToSheetRowBorrador
+						filledRows,
+						mapDataToCompactSheetRowBorrador
 					);
 				} catch (error) {
 					console.error("No se pudo guardar el borrador", error);
@@ -4334,6 +4895,96 @@
 			};
 
 			addRowButton.addEventListener("click", () => addRow());
+			tableBody.addEventListener("input", () => {
+				ensureTrailingEmptyRows();
+			});
+			// Chip click in assign modal
+			economicoAssignUnits?.addEventListener("click", (event) => {
+				const chip = event.target.closest("[data-eco-chip]");
+				if (!chip) return;
+				const eco = String(chip.dataset.ecoChip || "").trim().toLowerCase();
+				if (!eco) return;
+				const idx = assignPickedUnits.indexOf(eco);
+				if (idx === -1) {
+					assignPickedUnits.push(eco);
+				} else {
+					assignPickedUnits.splice(idx, 1);
+				}
+				chip.classList.toggle("selected", assignPickedUnits.includes(eco));
+				updateAssignSelectedLabel();
+			});
+
+			economicoAssignJaulas?.addEventListener("click", (event) => {
+				const chip = event.target.closest("[data-jaula-chip]");
+				if (!chip) return;
+				const jaula = String(chip.dataset.jaulaChip || "").trim();
+				if (!jaula) return;
+				assignPickedJaula = assignPickedJaula === jaula ? "" : jaula;
+				updateAssignSelectedLabel();
+			});
+
+			// Search filter
+			economicoAssignSearch?.addEventListener("input", () => {
+				renderAssignUnitChips(economicoAssignSearch.value || "");
+			});
+
+			economicoAssignForm?.addEventListener("submit", (event) => {
+				event.preventDefault();
+				if (!economicoAssignResolve) return;
+				if (assignPickedUnits.length === 0) {
+					if (economicoAssignSearch) economicoAssignSearch.focus();
+					alert("Selecciona al menos una unidad.");
+					return;
+				}
+				const hasJaulaUnits = assignPickedUnits.some(isJaulaUnit);
+				if (hasJaulaUnits && !assignPickedJaula) {
+					alert("Selecciona una jaula para las unidades con 🔄.");
+					return;
+				}
+				const resolve = economicoAssignResolve;
+				economicoAssignResolve = null;
+				const result = {
+					units: [...assignPickedUnits],
+					jaula: assignPickedJaula,
+				};
+				closeEconomicoAssignModal();
+				resolve(result);
+			});
+			economicoAssignCancel?.addEventListener("click", () => {
+				if (!economicoAssignResolve) {
+					closeEconomicoAssignModal();
+					return;
+				}
+				const resolve = economicoAssignResolve;
+				economicoAssignResolve = null;
+				closeEconomicoAssignModal();
+				resolve(null);
+			});
+			economicoAssignModal?.addEventListener("click", (event) => {
+				if (event.target !== economicoAssignModal) return;
+				if (!economicoAssignResolve) {
+					closeEconomicoAssignModal();
+					return;
+				}
+				const resolve = economicoAssignResolve;
+				economicoAssignResolve = null;
+				closeEconomicoAssignModal();
+				resolve(null);
+			});
+			document.addEventListener("keydown", (event) => {
+				if (event.key === "Escape" && economicoAssignResolve) {
+					const resolve = economicoAssignResolve;
+					economicoAssignResolve = null;
+					closeEconomicoAssignModal();
+					resolve(null);
+					return;
+				}
+				if (!borradorSection?.classList.contains("active")) return;
+				const isShortcut = event.ctrlKey && !event.altKey && event.key.toLowerCase() === "u";
+				if (!isShortcut) return;
+				event.preventDefault();
+				applyEconomicoToMarkedRows();
+			});
 			saveDraftButton.addEventListener("click", async () => {
 				try {
 					await saveBorradorToApi();
@@ -4871,7 +5522,7 @@
 			conboyAvailableUnits?.addEventListener("click", (event) => {
 				const target = event.target;
 				if (!(target instanceof HTMLElement)) return;
-				const button = target.closest("[data-conboy-unit-index]");
+				const button = target.closest("[data-conboy-uni	 t-index]");
 				if (!button) return;
 				
 				// Evitar agregar unidades ya usadas
@@ -5110,15 +5761,23 @@
 			sendButton.addEventListener("click", async () => {
 				const dateLabel = promptForLogisticaDate();
 				if (!dateLabel) return;
-				const rows = getCurrentRows().map((row) => ({
+				const rows = getRowsWithContent(getCurrentRows()).map((row) => ({
 					...row,
 					fecha: dateLabel,
 				}));
+				if (rows.length === 0) {
+					alert("No hay datos para enviar.");
+					return;
+				}
 				try {
-					await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows, null, {
+					await sendRowsToSheet(SHEETDB_TAB_LOGISTICA, rows, mapDataToCompactSheetRow, {
 						clearFirst: false,
 					});
-					await sendRowsToSheet(SHEETDB_TAB_BORRADOR, [], mapDataToSheetRowBorrador);
+					await sendRowsToSheet(
+						SHEETDB_TAB_BORRADOR,
+						[],
+						mapDataToCompactSheetRowBorrador
+					);
 					await loadLogisticaData();
 				} catch (error) {
 					console.error("No se pudo guardar logística", error);
@@ -5147,6 +5806,8 @@
 			formatDate();
 			applyBorradorColumnVisibility();
 			renderBorradorColumnToggles();
+			ensureEconomicoHeaderMarker();
+			ensureTrailingEmptyRows();
 			loadDestinoData();
 			loadFlotaData();
 			loadData().catch((error) => console.error("Error al cargar", error));

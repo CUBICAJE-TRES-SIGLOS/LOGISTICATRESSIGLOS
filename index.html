@@ -9,6 +9,7 @@
 				color-scheme: light;
 				--bg: #f7f9fc;
 				--paper-line: rgba(37, 99, 235, 0.12);
+				--draft-grid: rgba(0, 0, 0, 0.72);
 				--paper-shadow: rgba(15, 23, 42, 0.04);
 				--card: #ffffff;
 				--text: #0f172a;
@@ -208,11 +209,15 @@
 
 			#borradorSection thead th {
 				background: transparent;
-				border-bottom: 1px solid var(--paper-line);
+				border: 1px solid var(--draft-grid);
+			}
+
+			#borradorSection table {
+				border: 2px solid var(--draft-grid);
 			}
 
 			#borradorSection tbody td {
-				border-bottom: 1px solid var(--paper-line);
+				border: 1px solid var(--draft-grid);
 			}
 
 			#borradorSection tbody tr:hover {
